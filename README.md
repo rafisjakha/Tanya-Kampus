@@ -105,9 +105,9 @@ python -m scripts.doctor
 python -m scripts.seed_demo
 
 # 5. Jalankan API + panel admin
-uvicorn app.main:app --reload
-# Panel admin:  http://127.0.0.1:8000/admin/
-# Docs API:     http://127.0.0.1:8000/docs
+uvicorn app.main:app --reload --port 8001
+# Panel admin:  http://127.0.0.1:8001/admin/
+# Docs API:     http://127.0.0.1:8001/docs
 ```
 
 `python -m scripts.doctor --live` sekaligus menguji model embedding, satu panggilan Gemini, token Telegram, dan API yang sedang jalan. Jalankan setelah `.env` terisi.

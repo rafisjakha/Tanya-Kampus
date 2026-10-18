@@ -189,7 +189,7 @@ def live_api(settings: Settings) -> Check:
         r = httpx.get(f"{settings.api_base_url}/health", timeout=5)
         return Check(OK if r.status_code == 200 else FAIL, "API berjalan", f"{settings.api_base_url} -> {r.status_code}")
     except Exception:  # noqa: BLE001
-        return Check(WARN, "API berjalan", f"{settings.api_base_url} tidak terjangkau (jalankan: uvicorn app.main:app)")
+        return Check(WARN, "API berjalan", f"{settings.api_base_url} tidak terjangkau (jalankan: uvicorn app.main:app --port 8001)")
 
 
 def run_checks(settings: Settings | None = None, live: bool = False) -> list[Check]:

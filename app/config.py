@@ -147,7 +147,7 @@ class Settings:
             cache_ttl_hours=_get_int("CACHE_TTL_HOURS", 24),
             warmup=_get_bool("WARMUP", True),
             telegram_token=_get("TELEGRAM_TOKEN"),
-            api_base_url=(_get("API_BASE_URL", "http://127.0.0.1:8000") or "").rstrip("/"),
+            api_base_url=(_get("API_BASE_URL", "http://127.0.0.1:8001") or "").rstrip("/"),
             admin_telegram_ids=_get_id_set("ADMIN_TELEGRAM_IDS"),
             bot_cooldown_seconds=_get_float("BOT_COOLDOWN_SECONDS", 3.0),
         )

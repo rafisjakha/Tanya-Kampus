@@ -1,8 +1,8 @@
 """Entry point FastAPI.
 
-Jalankan:  uvicorn app.main:app --reload
-Panel admin: http://127.0.0.1:8000/admin/
-Dokumentasi API: http://127.0.0.1:8000/docs
+Jalankan:  uvicorn app.main:app --reload --port 8001
+Panel admin: http://127.0.0.1:8001/admin/
+Dokumentasi API: http://127.0.0.1:8001/docs
 """
 from __future__ import annotations
 

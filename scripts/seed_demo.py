@@ -43,7 +43,7 @@ def main() -> int:
         )
         doc = service.index_document(doc_id, embedder, settings)
         print(f"- '{title}': {doc['chunk_count']} chunk")
-    print("Selesai. Jalankan: uvicorn app.main:app --reload")
+    print("Selesai. Jalankan: uvicorn app.main:app --reload --port 8001")
     return 0
 
 

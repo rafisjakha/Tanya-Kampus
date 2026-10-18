@@ -97,6 +97,8 @@ class Cooldown:
 _GREETING_WORDS = {"halo", "hai", "hi", "hello", "hallo", "hei", "p", "tes", "test", "ping", "assalamualaikum",
                    "assalamu'alaikum", "salam", "selamat", "pagi", "siang", "sore", "malam"}
 _THANKS_WORDS = {"makasih", "thanks", "thx", "tks", "trims", "thank", "terimakasih", "nuhun", "mksh"}
+_PRAISE_WORDS = {"membantu", "bantu", "keren", "bagus", "mantap", "hebat", "pintar", "pinter", "kece", "top", "oke", "ok"}
+_IDENTITY_RE = re.compile(r"\b(kamu siapa|siapa kamu|kamu bot|kamu (itu )?(bukan )?tanya kampus|bukan tanya kampus)\b")
 _PUNCT_RE = re.compile(r"[^\w\s']", re.UNICODE)
 
 GREETING_REPLY = (
@@ -104,15 +106,24 @@ GREETING_REPLY = (
     "contoh: Apa syarat sidang tugas akhir?"
 )
 THANKS_REPLY = "Sama-sama! Kalau ada pertanyaan lain seputar akademik atau tugas akhir, tanyakan saja."
+PRAISE_REPLY = "Senang bisa membantu! Kalau masih ada yang mau ditanyakan soal akademik atau tugas akhir, langsung tanya aja ya."
+IDENTITY_REPLY = (
+    "Iya, aku Tanya Kampus, asisten Telegram untuk informasi akademik dan tugas akhir. "
+    "Aku menjawab dari dokumen resmi kampus, lengkap dengan sumbernya. Mau tanya apa?"
+)
 
 
 def smalltalk_reply(text: str) -> str | None:
     """Balasan untuk sapaan/terima kasih singkat, atau None bila pesan itu sebuah pertanyaan."""
     words = _PUNCT_RE.sub(" ", text.casefold()).split()
-    if not words or len(words) > 4:
+    if not words or len(words) > 5:
         return None
     if "terima kasih" in " ".join(words) or any(w in _THANKS_WORDS for w in words):
         return THANKS_REPLY
+    if _IDENTITY_RE.search(" ".join(words)):
+        return IDENTITY_REPLY
+    if any(w in _PRAISE_WORDS for w in words) and words[0] in {"kamu", "bot", "kau", "anda", "bagus", "mantap", "keren", "makasih"} | _PRAISE_WORDS:
+        return PRAISE_REPLY
     if words[0] in _GREETING_WORDS and all(w in _GREETING_WORDS or w in {"kak", "min", "admin", "bot", "bang", "mas", "mbak", "bu", "pak"} for w in words):
         return GREETING_REPLY
     return None
