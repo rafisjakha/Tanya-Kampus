@@ -34,7 +34,6 @@ from .formatting import (
     WELCOME,
     Cooldown,
     format_answer,
-    smalltalk_reply,
     split_message,
 )
 
@@ -157,10 +156,6 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return  # di grup hanya merespons /tanya
     text = (update.message.text or "").strip()
     if not text:
-        return
-    reply = smalltalk_reply(text)
-    if reply:
-        await update.message.reply_text(reply)
         return
     await answer_question(update, context, text)
 

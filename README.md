@@ -121,7 +121,7 @@ Login dengan `ADMIN_USERNAME` dan `ADMIN_PASSWORD` dari `.env`. Admin dibuat oto
 3. Di terminal lain: `python -m app.bot.telegram_bot`
 4. Buka bot di Telegram, kirim `/start`, lalu tanyakan sesuatu.
 
-Bot menjawab sapaan dan ucapan terima kasih tanpa memanggil LLM, menolak pesan non-teks dengan ramah, dan membatasi frekuensi tanya per pengguna (`BOT_COOLDOWN_SECONDS`).
+Sapaan dan obrolan ringan dijawab Gemini (tanpa sumber), bot menolak pesan non-teks dengan ramah, dan membatasi frekuensi tanya per pengguna (`BOT_COOLDOWN_SECONDS`).
 
 Untuk fitur kirim file sebagai admin: kirim `/id` ke bot, masukkan angkanya ke `ADMIN_TELEGRAM_IDS`, restart bot. File yang dikirim menjadi **draft**; tinjau dan klik Index di panel admin. Judul diambil dari caption file.
 

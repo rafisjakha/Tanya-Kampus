@@ -17,9 +17,11 @@ from dataclasses import dataclass, field
 from ..config import Settings
 from ..db import db, get_index_version
 from .llm import LLMClient, LLMError
-from .prompt import NOT_FOUND_MESSAGE, NOT_FOUND_TOKEN, SYSTEM_PROMPT, build_prompt
+from .prompt import CHAT_PROMPT, NOT_FOUND_MESSAGE, NOT_FOUND_TOKEN, SYSTEM_PROMPT, build_prompt
 from .search import Hit, Retriever
 
+CHAT_MAX_WORDS = 30  # pesan lebih panjang langsung memakai pesan 'tidak ditemukan' baku (hemat kuota)
+_CITATION_RE = re.compile(r"\[\d+\]")
 ERROR_MESSAGE = "Maaf, layanan jawaban sedang bermasalah. Coba lagi beberapa saat lagi."
 _CITE_RE = re.compile(r"\[(\d+)\]")
 _NORM_RE = re.compile(r"[^\w\s]", re.UNICODE)
@@ -129,6 +131,23 @@ class Pipeline:
             )
             return int(cur.lastrowid)
 
+    def _llm_fallback(self, question: str) -> tuple[str, str]:
+        """Balasan LLM saat dokumen tidak menjawab: ("answered", obrolan ringan) atau ("not_found", pesan ramah)."""
+        if len(question.split()) > CHAT_MAX_WORDS:
+            return "not_found", NOT_FOUND_MESSAGE
+        try:
+            raw = self.llm.generate(CHAT_PROMPT, question).strip()
+        except LLMError:
+            return "not_found", NOT_FOUND_MESSAGE
+        if raw.startswith(NOT_FOUND_TOKEN):
+            text = raw[len(NOT_FOUND_TOKEN):].lstrip(" :.-\n").strip()
+            if not text or _CITATION_RE.search(text):
+                text = NOT_FOUND_MESSAGE
+            return "not_found", text
+        if not raw or _CITATION_RE.search(raw):
+            return "not_found", NOT_FOUND_MESSAGE
+        return "answered", raw
+
     # -- inti -----------------------------------------------------------------------------------
 
     def ask(
@@ -166,7 +185,8 @@ class Pipeline:
         debug_hits = [h.to_debug() for h in hits]
         top = hits[0].score if hits else None
         if not hits or top < self.settings.score_threshold:
-            return finish("not_found", NOT_FOUND_MESSAGE, top=top, hits=debug_hits)
+            status, text = self._llm_fallback(question)
+            return finish(status, text, top=top, hits=debug_hits)
 
         # 3. generate
         try:
@@ -175,7 +195,8 @@ class Pipeline:
             return finish("error", ERROR_MESSAGE, top=top, error=str(exc), hits=debug_hits)
 
         if raw.strip().strip(".").upper() == NOT_FOUND_TOKEN or raw.strip().startswith(NOT_FOUND_TOKEN):
-            return finish("not_found", NOT_FOUND_MESSAGE, top=top, hits=debug_hits)
+            status, text = self._llm_fallback(question)
+            return finish(status, text, top=top, hits=debug_hits)
 
         sources = _cited_sources(raw, hits)
         with db() as conn:

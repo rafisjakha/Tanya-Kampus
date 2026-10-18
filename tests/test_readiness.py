@@ -4,7 +4,6 @@ import zipfile
 
 import pytest
 
-from app.bot.formatting import GREETING_REPLY, THANKS_REPLY, smalltalk_reply
 from app.db import db, init_db
 from tests.conftest import SAMPLE_MD
 
@@ -178,23 +177,3 @@ def test_doctor_berjalan_dan_menandai_masalah(env, monkeypatch):
     assert checks["GEMINI_API_KEY"].level == "fail"
     assert checks["Folder data"].level == "ok" and checks["SQLite FTS5"].level == "ok"
     assert checks["Knowledge"].level == "warn"  # belum ada dokumen terindeks
-
-
-# --- sapaan ---------------------------------------------------------------------------------------------
-
-@pytest.mark.parametrize("text", ["halo", "Halo kak!", "selamat pagi", "Assalamualaikum", "hi", "p"])
-def test_sapaan(text):
-    assert smalltalk_reply(text) == GREETING_REPLY
-
-
-@pytest.mark.parametrize("text", ["terima kasih", "makasih ya", "Thanks!", "terima kasih banyak kak"])
-def test_terima_kasih(text):
-    assert smalltalk_reply(text) == THANKS_REPLY
-
-
-@pytest.mark.parametrize("text", [
-    "halo, syarat sidang apa saja?", "kapan jadwal KRS", "syarat terima beasiswa", "pagi ini kuliah jam berapa",
-    "Bagaimana cara cuti akademik?", "",
-])
-def test_pertanyaan_bukan_sapaan(text):
-    assert smalltalk_reply(text) is None

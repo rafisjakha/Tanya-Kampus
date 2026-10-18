@@ -63,15 +63,45 @@ def test_ask_butuh_api_key_bila_diset(client, indexed_doc):
     assert client.post("/api/ask", headers={"X-API-Key": "salah"}, json={"question": "cuti"}).status_code == 401
 
 
-def test_pertanyaan_di_luar_dokumen_tidak_memanggil_llm(client, indexed_doc, stub_llm):
+def test_pertanyaan_di_luar_dokumen_not_found(client, indexed_doc, stub_llm):
+    stub_llm.reply = "TIDAK_DITEMUKAN"  # LLM menilai ini pertanyaan informasi, bukan obrolan
     r = client.post(
         "/api/ask", headers={"X-API-Key": "bot-key-tes"},
         json={"question": "Siapa pemenang piala dunia sepak bola terakhir?"},
     )
     body = r.json()
     assert body["status"] == "not_found" and not body["found"]
-    assert stub_llm.calls == 0
     assert "belum menemukan" in body["answer"]
+
+
+def test_not_found_disusun_llm(client, indexed_doc, stub_llm):
+    stub_llm.reply = "TIDAK_DITEMUKAN: Soal piala dunia aku belum nemu di dokumen, coba tanya bagian akademik ya."
+    r = client.post(
+        "/api/ask", headers={"X-API-Key": "bot-key-tes"},
+        json={"question": "Siapa pemenang piala dunia sepak bola terakhir?"},
+    )
+    body = r.json()
+    assert body["status"] == "not_found" and not body["found"]
+    assert body["answer"] == "Soal piala dunia aku belum nemu di dokumen, coba tanya bagian akademik ya."
+
+
+def test_obrolan_ringan_dijawab_llm_tanpa_sumber(client, indexed_doc, stub_llm):
+    stub_llm.reply = "Makasih! Kalau ada yang mau ditanyakan soal akademik, tanya aja ya."
+    r = client.post(
+        "/api/ask", headers={"X-API-Key": "bot-key-tes"},
+        json={"question": "kamu membantu sekali!"},
+    )
+    body = r.json()
+    assert body["status"] == "answered"
+    assert body["answer"] == stub_llm.reply
+    assert body["sources"] == []
+
+
+def test_pertanyaan_panjang_tidak_dianggap_obrolan(client, indexed_doc, stub_llm):
+    q = "Siapa pemenang piala dunia sepak bola terakhir " + "dan seterusnya " * 20
+    r = client.post("/api/ask", headers={"X-API-Key": "bot-key-tes"}, json={"question": q})
+    assert r.json()["status"] == "not_found"
+    assert stub_llm.calls == 0
 
 
 def test_llm_membalas_tidak_ditemukan(client, indexed_doc, stub_llm):

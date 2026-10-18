@@ -202,11 +202,11 @@ def test_tombol_unduh_gagal_memberi_pesan_ramah():
     assert "tidak bisa dikirim" in ctx.bot.send_message.call_args.args[1]
 
 
-def test_sapaan_tidak_memanggil_api():
+def test_sapaan_diteruskan_ke_api():
     api = FakeApi(ANSWER)
     upd, ctx = make_update(text="halo kak"), make_context(api)
     run(bot.on_text(upd, ctx))
-    assert api.asked == [] and "Tanya Kampus" in upd.message.reply_text.call_args[0][0]
+    assert len(api.asked) == 1 and api.asked[0][0] == "halo kak"
 
 
 def test_pesan_non_teks_dijawab_sopan():
