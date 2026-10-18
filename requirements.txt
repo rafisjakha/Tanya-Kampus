@@ -1,0 +1,36 @@
+# Web/API
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+httpx>=0.27
+
+# Keamanan
+PyJWT>=2.8
+bcrypt>=4.1
+
+# RAG
+numpy>=1.26
+# Di Linux, baris ini membuat pip memilih torch versi CPU (jauh lebih kecil dari versi CUDA).
+--extra-index-url https://download.pytorch.org/whl/cpu
+sentence-transformers>=3.0
+# Mac Intel (x86_64): PyTorch terakhir yang tersedia adalah 2.2.2, jadi versi lain dibatasi agar cocok.
+torch<2.3; sys_platform == "darwin" and platform_machine == "x86_64"
+numpy<2; sys_platform == "darwin" and platform_machine == "x86_64"
+transformers>=4.41,<4.50; sys_platform == "darwin" and platform_machine == "x86_64"
+sentence-transformers<4; sys_platform == "darwin" and platform_machine == "x86_64"
+tokenizers<0.22; sys_platform == "darwin" and platform_machine == "x86_64"
+google-genai>=1.0
+
+# Ingestion (konversi ke markdown)
+markitdown[pdf,docx,pptx,xlsx]>=0.1.0
+trafilatura>=1.12
+# OCR untuk PDF scan dan gambar (butuh program Tesseract terpasang di sistem, lihat README)
+pytesseract>=0.3.10
+pypdfium2>=4.30
+pillow>=10.0
+
+# Bot Telegram
+python-telegram-bot>=21.0
+
+# Konfigurasi
+python-dotenv>=1.0

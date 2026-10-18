@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tanya Kampus Admin</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f766e'/%3E%3Cpath d='M9 12h14M9 17h9' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- LOGIN -->
+  <main id="view-login" class="login" hidden>
+    <form id="login-form" class="card login-card" autocomplete="on">
+      <div class="brand brand-lg"><span class="logo" aria-hidden="true"></span> Tanya Kampus</div>
+      <p class="muted">Masuk untuk mengelola knowledge chatbot.</p>
+      <label>Username
+        <input name="username" autocomplete="username" required autofocus>
+      </label>
+      <label>Password
+        <input name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <p id="login-error" class="error" role="alert" hidden></p>
+      <button class="btn primary" type="submit">Masuk</button>
+    </form>
+  </main>
+
+  <!-- APLIKASI -->
+  <div id="view-app" hidden>
+    <header class="topbar">
+      <div class="brand"><span class="logo" aria-hidden="true"></span> Tanya Kampus <span class="muted tag">Admin</span></div>
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="docs" class="tab active">Dokumen</button>
+        <button role="tab" data-tab="ask" class="tab">Tes Tanya</button>
+        <button role="tab" data-tab="logs" class="tab">Log</button>
+      </nav>
+      <div class="topbar-right">
+        <span id="whoami" class="muted"></span>
+        <button id="btn-password" class="btn ghost small">Ganti password</button>
+        <button id="btn-logout" class="btn ghost small">Keluar</button>
+      </div>
+    </header>
+
+    <div id="banners"></div>
+
+    <main class="container">
+      <!-- DOKUMEN -->
+      <section id="tab-docs" class="panel">
+        <div id="stats" class="stats"></div>
+        <div class="toolbar">
+          <button class="btn primary" data-add="file">Upload file</button>
+          <button class="btn" data-add="url">Dari URL</button>
+          <button class="btn" data-add="manual">Tulis manual</button>
+          <span class="spacer"></span>
+          <input id="doc-search" type="search" class="search" placeholder="Cari judul, file, kategori..." aria-label="Cari dokumen">
+          <select id="doc-filter" class="filter" aria-label="Filter status">
+            <option value="">Semua status</option>
+            <option value="need">Perlu di-index</option>
+            <option value="indexed">Terindeks</option>
+          </select>
+          <button id="btn-reindex" class="btn" title="Hitung ulang embedding semua dokumen, mis. setelah ganti model">Re-index semua</button>
+        </div>
+        <div class="card table-wrap">
+          <table>
+            <thead>
+              <tr><th>Judul</th><th>Kategori</th><th>Sumber</th><th>Status</th><th class="num">Chunk</th><th>Diperbarui</th><th></th></tr>
+            </thead>
+            <tbody id="docs-body"></tbody>
+          </table>
+          <p id="docs-empty" class="empty" hidden>Belum ada dokumen. Tambahkan lewat Upload file, Dari URL, atau Tulis manual.</p>
+        </div>
+      </section>
+
+      <!-- TES TANYA -->
+      <section id="tab-ask" class="panel" hidden>
+        <form id="ask-form" class="card ask-form">
+          <label>Pertanyaan
+            <textarea name="question" rows="3" maxlength="500" placeholder="mis. Bagaimana cara mengajukan cuti akademik?" required></textarea>
+          </label>
+          <div class="row">
+            <label class="grow">Filter kategori
+              <select name="category"><option value="">Semua kategori</option></select>
+            </label>
+            <button class="btn primary" type="submit">Tanya</button>
+          </div>
+        </form>
+        <div id="ask-result"></div>
+      </section>
+
+      <!-- LOG -->
+      <section id="tab-logs" class="panel" hidden>
+        <div class="toolbar">
+          <div class="chips" id="log-filter">
+            <button class="chip active" data-status="">Semua</button>
+            <button class="chip" data-status="not_found">Tidak ditemukan</button>
+            <button class="chip" data-status="error">Error</button>
+            <button class="chip" data-status="answered">Terjawab</button>
+          </div>
+          <span class="spacer"></span>
+          <span class="muted small-text">Pertanyaan "tidak ditemukan" menunjukkan knowledge yang masih kurang.</span>
+        </div>
+        <div class="card table-wrap">
+          <table>
+            <thead><tr><th>Waktu</th><th>Pertanyaan</th><th>Status</th><th class="num">Skor</th><th>Kanal</th><th>Feedback</th></tr></thead>
+            <tbody id="logs-body"></tbody>
+          </table>
+          <p id="logs-empty" class="empty" hidden>Belum ada log.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- DIALOG: tambah dokumen -->
+  <dialog id="dlg-add">
+    <form method="dialog" id="add-form" class="dlg">
+      <h2 id="add-title">Tambah knowledge</h2>
+      <div id="add-source"></div>
+      <label><span>Judul <span class="muted">(opsional untuk file/URL)</span></span>
+        <input name="title" maxlength="300">
+      </label>
+      <div class="row">
+        <label class="grow">Kategori
+          <input name="category" list="category-list" value="akademik" required>
+        </label>
+        <label class="grow">Tanggal berlaku
+          <input name="effective_date" type="date">
+        </label>
+      </div>
+      <div class="checks">
+        <label class="check"><input type="checkbox" name="autoindex"><span>Langsung index (lewati peninjauan)</span></label>
+        <label class="check" id="add-downloadable-wrap"><input type="checkbox" name="downloadable"><span>Izinkan bot mengirim file asli ke mahasiswa (mis. template)</span></label>
+      </div>
+      <p class="hint" id="add-hint">Tanpa "Langsung index", dokumen berstatus Draft: periksa hasil konversi markdown, lalu Index.</p>
+      <ul id="add-results" class="results" hidden></ul>
+      <p id="add-error" class="error" role="alert" hidden></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn" data-close>Batal</button>
+        <button type="submit" class="btn primary" id="add-submit">Buat</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- DIALOG: edit dokumen -->
+  <dialog id="dlg-edit" class="wide">
+    <form method="dialog" id="edit-form" class="dlg">
+      <div class="dlg-head">
+        <h2>Edit dokumen</h2>
+        <span id="edit-status"></span>
+      </div>
+      <p id="edit-note" class="note" role="note" hidden></p>
+      <div class="row">
+        <label class="grow2">Judul
+          <input name="title" maxlength="300" required>
+        </label>
+        <label class="grow">Kategori
+          <input name="category" list="category-list" required>
+        </label>
+        <label class="grow">Tanggal berlaku
+          <input name="effective_date" type="date">
+        </label>
+      </div>
+      <label><span>URL sumber <span class="muted">(ditampilkan sebagai tautan di jawaban bila ada)</span></span>
+        <input name="source_url" type="url" maxlength="2000">
+      </label>
+      <label class="check" id="edit-downloadable-wrap"><input type="checkbox" name="downloadable"><span>Izinkan bot mengirim file asli ke mahasiswa (mis. template)</span></label>
+      <label>Isi (markdown)
+        <textarea name="markdown" rows="18" spellcheck="false" class="mono"></textarea>
+      </label>
+      <p class="hint">Gunakan <code>#</code>, <code>##</code> untuk bab dan sub-bab. Chunk dipotong per heading, jadi struktur yang rapi menghasilkan jawaban yang lebih akurat.</p>
+      <p id="edit-error" class="error" role="alert" hidden></p>
+      <div class="dlg-actions">
+        <div class="left">
+          <button type="button" class="btn danger" id="edit-delete">Hapus</button>
+          <button type="button" class="btn" id="edit-download" hidden>Unduh file asli</button>
+          <label class="btn file-btn" id="edit-replace-wrap">Ganti file<input type="file" id="edit-replace" hidden></label>
+          <button type="button" class="btn" id="edit-chunks">Lihat chunk</button>
+        </div>
+        <div class="right">
+          <button type="button" class="btn" data-close>Tutup</button>
+          <button type="button" class="btn" id="edit-save">Simpan</button>
+          <button type="button" class="btn primary" id="edit-save-index">Simpan &amp; Index</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- DIALOG: chunk -->
+  <dialog id="dlg-chunks" class="wide">
+    <div class="dlg">
+      <div class="dlg-head"><h2 id="chunks-title">Chunk</h2><button class="btn small" data-close>Tutup</button></div>
+      <div id="chunks-list" class="chunk-list"></div>
+    </div>
+  </dialog>
+
+  <!-- DIALOG: ganti password -->
+  <dialog id="dlg-password">
+    <form method="dialog" id="password-form" class="dlg">
+      <h2>Ganti password</h2>
+      <label>Password lama <input name="old_password" type="password" autocomplete="current-password" required></label>
+      <label><span>Password baru <span class="muted">(8 sampai 72 karakter)</span></span>
+        <input name="new_password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+      </label>
+      <p id="password-error" class="error" role="alert" hidden></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn" data-close>Batal</button>
+        <button type="submit" class="btn primary">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <datalist id="category-list"></datalist>
+  <div id="toasts" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

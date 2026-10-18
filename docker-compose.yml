@@ -1,0 +1,23 @@
+# BELUM DIUJI di lingkungan pengembangan ini. Perlakukan sebagai titik awal.
+# Jalankan: docker compose up --build
+services:
+  api:
+    build: .
+    env_file: .env
+    environment:
+      DATA_DIR: /app/data
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data   # database, file asli, dan cache model embedding
+    restart: unless-stopped
+
+  bot:
+    build: .
+    command: ["python", "-m", "app.bot.telegram_bot"]
+    env_file: .env
+    environment:
+      API_BASE_URL: http://api:8000
+    depends_on:
+      - api
+    restart: unless-stopped

@@ -1,0 +1,14 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# data lokal: database, file asli. Dokumen contoh di data/sample tetap ikut repo.
+data/*
+!data/sample/
+!data/.gitkeep
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
