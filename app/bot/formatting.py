@@ -108,7 +108,7 @@ GREETING_REPLY = (
 THANKS_REPLY = "Sama-sama! Kalau ada pertanyaan lain seputar akademik atau tugas akhir, tanyakan saja."
 PRAISE_REPLY = "Senang bisa membantu! Kalau masih ada yang mau ditanyakan soal akademik atau tugas akhir, langsung tanya aja ya."
 IDENTITY_REPLY = (
-    "Iya, aku Tanya Kampus, asisten Telegram untuk informasi akademik dan tugas akhir. "
+    "Aku Tanya Kampus, asisten Telegram untuk membantu kamu dalam mencari informasi akademik kampus. "
     "Aku menjawab dari dokumen resmi kampus, lengkap dengan sumbernya. Mau tanya apa?"
 )
 
