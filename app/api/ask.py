@@ -23,6 +23,7 @@ def ask(body: AskIn, pipeline: Pipeline = Depends(get_pipeline)):
         category=normalize_category(body.category) if body.category else None,
         channel=body.channel,
         user_ref=body.user_ref,
+        history=[(t.question, t.answer) for t in body.history],
     )
     return result.to_dict()
 
@@ -39,6 +40,7 @@ def admin_ask(
         category=normalize_category(body.category) if body.category else None,
         channel="admin-test",
         user_ref=username,
+        history=[(t.question, t.answer) for t in body.history],
     )
     return result.to_dict(include_debug=True)
 

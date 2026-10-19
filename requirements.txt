@@ -23,6 +23,7 @@ google-genai>=1.0
 
 # Ingestion (konversi ke markdown)
 markitdown[pdf,docx,pptx,xlsx]>=0.1.0
+pdfplumber>=0.11  # jadwal berbentuk grid dibaca per sel
 trafilatura>=1.12
 # OCR untuk PDF scan dan gambar (butuh program Tesseract terpasang di sistem, lihat README)
 pytesseract>=0.3.10

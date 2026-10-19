@@ -20,7 +20,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from ..config import get_settings
-from . import ocr
+from . import ocr, schedule
 
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp"}
 SUPPORTED_EXTENSIONS = {
@@ -85,8 +85,22 @@ def _enough(text: str) -> bool:
     return len(text.strip()) >= MIN_TEXT_CHARS
 
 
+def _convert_schedule(path: Path) -> ConversionResult | None:
+    """PDF jadwal berbentuk grid dibaca per sel (lihat schedule.py); None bila bukan jadwal grid."""
+    try:
+        res = schedule.convert_schedule_pdf(path)
+    except Exception:  # noqa: BLE001 - parser eksperimental: jangan gagalkan konversi biasa
+        return None
+    if not res or not _enough(res[0]):
+        return None
+    return ConversionResult(normalize_markdown(res[0]), res[1] or "Jadwal dibaca per sel (hari, jam, ruangan, dosen).")
+
+
 def _convert_pdf(path: Path) -> ConversionResult:
     settings = get_settings()
+    grid = _convert_schedule(path)
+    if grid:
+        return grid
     try:
         text = _markitdown_text(path)
     except ConversionError:

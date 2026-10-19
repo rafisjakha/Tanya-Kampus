@@ -9,7 +9,8 @@ import pytest
 pytest.importorskip("telegram")
 
 from app.bot import telegram_bot as bot  # noqa: E402
-from app.bot.formatting import API_DOWN, BUSY, Cooldown  # noqa: E402
+from app.bot.formatting import API_DOWN, BUSY, ChatHistory, Cooldown  # noqa: E402
+from app.bot.session import Sessions  # noqa: E402
 
 
 class FakeApi:
@@ -17,8 +18,9 @@ class FakeApi:
         self.result, self.error = result, error
         self.asked, self.feedbacks, self.ingested = [], [], []
 
-    async def ask(self, question, user_ref):
+    async def ask(self, question, user_ref, history=None):
         self.asked.append((question, user_ref))
+        self.histories = getattr(self, "histories", []) + [history]
         if self.error:
             raise self.error
         return self.result
@@ -35,6 +37,7 @@ def make_update(text="Apa syarat sidang?", user_id=1, chat_type="private"):
     msg = SimpleNamespace(text=text, reply_text=AsyncMock(), caption=None, document=None)
     return SimpleNamespace(
         message=msg,
+        effective_message=msg,
         effective_user=SimpleNamespace(id=user_id),
         effective_chat=SimpleNamespace(id=99, type=chat_type),
     )
@@ -44,9 +47,12 @@ def make_context(api, admin_ids=(), args=None):
     app = SimpleNamespace(bot_data={
         "api": api,
         "cooldown": Cooldown(3),
+        "history": ChatHistory(),
+        "start_guard": Cooldown(0),  # tes penjaga klik ganda membuat Cooldown sendiri
+        "sessions": Sessions(0),  # 0 = tanpa batas waktu; tes sesi membuat Sessions sendiri
         "settings": SimpleNamespace(admin_telegram_ids=frozenset(admin_ids)),
     })
-    return SimpleNamespace(application=app, bot=SimpleNamespace(send_chat_action=AsyncMock()), args=args or [])
+    return SimpleNamespace(application=app, bot=SimpleNamespace(send_chat_action=AsyncMock(), send_message=AsyncMock()), args=args or [])
 
 
 ANSWER = {"query_id": 5, "status": "answered", "answer": "Butuh 8 kali bimbingan [1].",
@@ -58,13 +64,13 @@ def run(coro):
     return asyncio.run(coro)
 
 
-def test_pertanyaan_dijawab_dengan_sumber_dan_tombol_feedback():
+def test_pertanyaan_dijawab_tanpa_daftar_sumber_dengan_tombol_feedback():
     api, upd, ctx = FakeApi(ANSWER), make_update(), None
     ctx = make_context(api)
     run(bot.on_text(upd, ctx))
     assert api.asked == [("Apa syarat sidang?", "1")]
     args, kwargs = upd.message.reply_text.call_args
-    assert "Sumber:" in args[0] and "Persyaratan Sidang" in args[0]
+    assert args[0] == "Butuh 8 kali bimbingan."  # tanpa daftar sumber dan tanpa penanda [1]
     buttons = kwargs["reply_markup"].inline_keyboard[0]
     assert [b.callback_data for b in buttons] == ["fb:5:1", "fb:5:-1"]
 
@@ -230,3 +236,244 @@ def test_api_client_download_membaca_nama_file(disposition, expected):
     client._http = httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://api")
     name, data = run(client.download(5))
     assert (name, data) == (expected, b"isi")
+
+
+def callback_data(markup):
+    return [b.callback_data for row in markup.inline_keyboard for b in row]
+
+
+def test_start_menampilkan_tombol_menu():
+    upd = make_update()
+    run(bot.cmd_start(upd, make_context(FakeApi())))
+    data = callback_data(upd.message.reply_text.call_args.kwargs["reply_markup"])
+    assert data == ["menu:tanya", "menu:help", "menu:about"]
+
+
+def make_callback(data, user_id=1):
+    msg = SimpleNamespace(reply_text=AsyncMock(), chat_id=99)
+    query = SimpleNamespace(data=data, answer=AsyncMock(), edit_message_text=AsyncMock(),
+                            edit_message_reply_markup=AsyncMock(), message=msg)
+    return SimpleNamespace(
+        callback_query=query, message=None, effective_message=msg,
+        effective_user=SimpleNamespace(id=user_id), effective_chat=SimpleNamespace(id=99, type="private"),
+    )
+
+
+def test_tombol_tentang_kami_menampilkan_tim():
+    upd = make_callback("menu:about")
+    run(bot.on_menu(upd, make_context(FakeApi())))
+    text = upd.callback_query.edit_message_text.call_args.args[0]
+    assert "Muhammad Raihan Fadani" in text and "Rafi Athallah Sjakha" in text
+    assert callback_data(upd.callback_query.edit_message_text.call_args.kwargs["reply_markup"])
+
+
+def test_tombol_bantuan_berubah_jadi_tombol_perintah():
+    upd = make_callback("menu:help")
+    run(bot.on_menu(upd, make_context(FakeApi())))
+    call = upd.callback_query.edit_message_text.call_args
+    assert "/tanya" in call.args[0] and "/id" not in call.args[0]
+    markup = call.kwargs["reply_markup"]
+    assert [b.text for row in markup.inline_keyboard for b in row] == ["❓ Tanya", "👥 Tentang Kami", "📋 Menu", "🏠 Beranda"]
+    assert callback_data(markup) == ["menu:tanya", "menu:about", "menu:main", "menu:home"]
+
+
+def test_tombol_menu_kembali_ke_menu_utama():
+    upd = make_callback("menu:main")
+    run(bot.on_menu(upd, make_context(FakeApi())))
+    assert callback_data(upd.callback_query.edit_message_text.call_args.kwargs["reply_markup"]) == [
+        "menu:tanya", "menu:help", "menu:about"]
+
+
+def test_tombol_beranda_kembali_ke_sambutan():
+    upd = make_callback("menu:home")
+    run(bot.on_menu(upd, make_context(FakeApi())))
+    call = upd.callback_query.edit_message_text.call_args
+    assert call.args[0] == bot.WELCOME
+    assert "menu:home" not in callback_data(call.kwargs["reply_markup"])  # sudah di beranda
+
+
+def test_tampilan_tentang_kami_punya_tombol_beranda():
+    upd = make_callback("menu:about")
+    run(bot.on_menu(upd, make_context(FakeApi())))
+    assert "menu:home" in callback_data(upd.callback_query.edit_message_text.call_args.kwargs["reply_markup"])
+
+
+def test_perintah_id_tetap_ada_untuk_admin():
+    upd = make_update(user_id=4242)
+    run(bot.cmd_id(upd, make_context(FakeApi())))
+    assert "4242" in upd.message.reply_text.call_args.args[0]
+
+
+def test_command_about():
+    upd = make_update()
+    run(bot.cmd_about(upd, make_context(FakeApi())))
+    assert "Tim pengembang" in upd.message.reply_text.call_args.args[0]
+
+
+def test_pesan_lanjutan_membawa_riwayat_ke_api():
+    api = FakeApi(ANSWER)
+    ctx = make_context(api)
+    run(bot.on_text(make_update(text="kelas S1IT-KJ-23-003 hari selasa apa?"), ctx))
+    ctx.application.bot_data["cooldown"] = Cooldown(0)  # lewati jeda antar pertanyaan
+    run(bot.on_text(make_update(text="kalo hari kamis?"), ctx))
+    assert api.histories[0] == []
+    assert api.histories[1] == [("kelas S1IT-KJ-23-003 hari selasa apa?", ANSWER["answer"])]
+
+
+def test_start_mengosongkan_riwayat():
+    api = FakeApi(ANSWER)
+    ctx = make_context(api)
+    run(bot.on_text(make_update(text="Apa syarat sidang?"), ctx))
+    run(bot.cmd_start(make_update(), ctx))
+    ctx.application.bot_data["cooldown"] = Cooldown(0)
+    run(bot.on_text(make_update(text="kalo yang lain?"), ctx))
+    assert api.histories[-1] == []
+
+
+def test_riwayat_kedaluwarsa_dan_dibatasi():
+    now = [0.0]
+    h = ChatHistory(ttl=100, max_turns=2, clock=lambda: now[0])
+    for i in range(3):
+        h.add(1, f"q{i}", f"a{i}")
+    assert h.get(1) == [("q1", "a1"), ("q2", "a2")]
+    now[0] = 101
+    assert h.get(1) == []
+
+
+# --- sesi: berakhir bila diam, harus /start lagi ------------------------------------------------------------
+
+def session_context(api, timeout=60.0, clock=None):
+    ctx = make_context(api)
+    ctx.application.bot_data["sessions"] = Sessions(timeout, clock=clock or (lambda: 0.0))
+    return ctx
+
+
+def test_tanpa_start_pesan_ditolak_dan_diminta_start():
+    api = FakeApi(ANSWER)
+    upd, ctx = make_update(text="Apa syarat sidang?"), session_context(api)
+    run(bot.on_text(upd, ctx))
+    assert api.asked == []
+    markup = upd.message.reply_text.call_args.kwargs["reply_markup"]
+    assert callback_data(markup) == ["session:start"]
+
+
+def test_setelah_start_pertanyaan_dijawab():
+    api = FakeApi(ANSWER)
+    ctx = session_context(api)
+    run(bot.cmd_start(make_update(), ctx))
+    run(bot.on_text(make_update(text="Apa syarat sidang?"), ctx))
+    assert len(api.asked) == 1
+
+
+def test_sesi_berakhir_setelah_diam_lalu_harus_start_lagi():
+    now = [0.0]
+    api = FakeApi(ANSWER)
+    ctx = session_context(api, timeout=60, clock=lambda: now[0])
+    run(bot.cmd_start(make_update(), ctx))
+    now[0] = 61  # lewat 1 menit tanpa aktivitas
+    upd = make_update(text="Apa syarat sidang?")
+    run(bot.on_text(upd, ctx))
+    assert api.asked == []
+    assert "berakhir" in upd.message.reply_text.call_args.args[0]
+    run(bot.cmd_start(make_update(), ctx))  # mulai lagi
+    run(bot.on_text(make_update(text="Apa syarat sidang?"), ctx))
+    assert len(api.asked) == 1
+
+
+def test_aktivitas_memperpanjang_sesi():
+    now = [0.0]
+    api = FakeApi(ANSWER)
+    ctx = session_context(api, timeout=60, clock=lambda: now[0])
+    run(bot.cmd_start(make_update(), ctx))
+    now[0] = 50
+    ctx.application.bot_data["cooldown"] = Cooldown(0)
+    run(bot.on_text(make_update(text="pertanyaan satu?"), ctx))
+    now[0] = 100  # 50 detik sejak aktivitas terakhir: masih aktif
+    run(bot.on_text(make_update(text="pertanyaan dua?"), ctx))
+    assert len(api.asked) == 2
+
+
+def test_grup_tidak_memakai_sesi():
+    api = FakeApi(ANSWER)
+    ctx = session_context(api)
+    run(bot.cmd_tanya(make_update(chat_type="group"), SimpleNamespace(
+        application=ctx.application, bot=ctx.bot, args=["syarat", "sidang?"])))
+    assert len(api.asked) == 1
+
+
+def test_pemberitahuan_dikirim_saat_sesi_berakhir():
+    sent = []
+
+    async def on_expire(user_id, chat_id):
+        sent.append((user_id, chat_id))
+
+    async def scenario():
+        sessions = Sessions(0.05, on_expire)
+        sessions.touch(7, 70)
+        assert sessions.is_active(7)
+        await asyncio.sleep(0.15)
+        assert not sessions.is_active(7)
+
+    run(scenario())
+    assert sent == [(7, 70)]
+
+
+def test_aktivitas_baru_membatalkan_hitung_mundur_lama():
+    sent = []
+
+    async def on_expire(user_id, chat_id):
+        sent.append(user_id)
+
+    async def scenario():
+        sessions = Sessions(0.1, on_expire)
+        sessions.touch(1, 10)
+        await asyncio.sleep(0.06)
+        sessions.touch(1, 10)  # diperpanjang
+        await asyncio.sleep(0.06)
+        assert sent == []  # hitung mundur pertama sudah dibatalkan
+        await asyncio.sleep(0.1)
+
+    run(scenario())
+    assert sent == [1]
+
+
+def test_sesi_tidak_berakhir_saat_jawaban_diproses():
+    sent = []
+
+    async def on_expire(user_id, chat_id):
+        sent.append(user_id)
+
+    async def scenario():
+        sessions = Sessions(0.05, on_expire)
+        sessions.begin_work(1, 10)
+        await asyncio.sleep(0.12)  # jawaban lambat melewati batas waktu
+        assert sent == []
+        sessions.end_work(1, 10)
+        await asyncio.sleep(0.12)
+
+    run(scenario())
+    assert sent == [1]
+
+
+# --- klik ganda ---------------------------------------------------------------------------------------------
+
+def test_start_dua_kali_beruntun_hanya_satu_sambutan():
+    ctx = make_context(FakeApi())
+    ctx.application.bot_data["start_guard"] = Cooldown(3)
+    first, second = make_update(), make_update()
+    run(bot.cmd_start(first, ctx))
+    run(bot.cmd_start(second, ctx))
+    assert first.message.reply_text.call_args.args[0] == bot.WELCOME
+    assert second.message.reply_text.call_args.args[0] == bot.STARTING  # diberi tahu, tanpa sambutan kedua
+
+
+def test_tombol_mulai_lagi_ditekan_dua_kali():
+    ctx = make_context(FakeApi())
+    ctx.application.bot_data["start_guard"] = Cooldown(3)
+    first, second = make_callback("session:start"), make_callback("session:start")
+    run(bot.on_session_start(first, ctx))
+    run(bot.on_session_start(second, ctx))
+    first.effective_message.reply_text.assert_called_once()  # sambutan hanya sekali
+    second.effective_message.reply_text.assert_not_called()
+    second.callback_query.answer.assert_any_call(bot.STARTING)
+    first.callback_query.edit_message_reply_markup.assert_called_once_with(reply_markup=None)  # tombol dihapus

@@ -71,8 +71,14 @@ class DocUpdateIn(BaseModel):
         return validate_date(v) if v is not None else None
 
 
+class HistoryTurn(BaseModel):
+    question: str = Field(max_length=2000)
+    answer: str = Field(max_length=4000)
+
+
 class AskIn(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
+    history: list[HistoryTurn] = Field(default_factory=list, max_length=10)  # percakapan sebelumnya, terlama dulu
     category: str | None = None
     user_ref: str | None = Field(default=None, max_length=64)
     channel: str = Field(default="api", max_length=20)

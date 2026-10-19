@@ -238,3 +238,39 @@ def test_karakter_aneh_di_pertanyaan_tidak_merusak_pencarian(client, auth, index
     # tabel tetap utuh
     assert len(client.get("/api/documents", headers=auth).json()) == 1
     assert client.get("/api/stats", headers=auth).json()["chunks"] >= 2
+
+
+def test_pesan_lanjutan_ditulis_ulang_memakai_riwayat(client, indexed_doc, stub_llm):
+    calls = []
+    original = stub_llm.generate
+
+    def generate(system, prompt):
+        calls.append((system, prompt))
+        if "menulis ulang pesan lanjutan" in system:
+            return "Kapan batas pengajuan cuti akademik?"
+        return original(system, prompt)
+
+    stub_llm.generate = generate
+    r = client.post(
+        "/api/ask", headers={"X-API-Key": "bot-key-tes"},
+        json={"question": "kalo batas pengajuannya?",
+              "history": [{"question": "Bagaimana cara mengajukan cuti akademik?", "answer": "Ajukan tertulis [1]."}]},
+    )
+    assert r.status_code == 200
+    rewrite_prompt = next(p for s, p in calls if "menulis ulang pesan lanjutan" in s)
+    assert "Bagaimana cara mengajukan cuti akademik?" in rewrite_prompt and "kalo batas pengajuannya?" in rewrite_prompt
+    answer_prompt = next(p for s, p in calls if "menulis ulang pesan lanjutan" not in s and "PERTANYAAN:" in p)
+    assert "PERTANYAAN: Kapan batas pengajuan cuti akademik?" in answer_prompt
+    assert r.json()["status"] == "answered"
+
+
+def test_tanpa_riwayat_tidak_ada_panggilan_tulis_ulang(client, indexed_doc, stub_llm):
+    client.post("/api/ask", headers={"X-API-Key": "bot-key-tes"}, json={"question": "kalo syaratnya?"})
+    assert stub_llm.calls <= 1  # hanya jawaban, tanpa tulis ulang
+
+
+def test_pertanyaan_panjang_dengan_riwayat_tidak_ditulis_ulang(client, indexed_doc, stub_llm):
+    q = "Apa saja syarat sidang tugas akhir " + "dan seterusnya " * 8
+    client.post("/api/ask", headers={"X-API-Key": "bot-key-tes"},
+                json={"question": q, "history": [{"question": "a", "answer": "b"}]})
+    assert "RIWAYAT:" not in stub_llm.last_prompt

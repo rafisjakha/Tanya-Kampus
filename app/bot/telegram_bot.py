@@ -13,6 +13,7 @@ import logging
 import httpx
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ChatAction, ChatType
+from telegram.error import BadRequest
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
@@ -24,16 +25,24 @@ from telegram.ext import (
 
 from ..config import Settings, get_settings
 from ..ingestion.converter import SUPPORTED_EXTENSIONS
+from .session import Sessions
 from .formatting import (
+    ABOUT,
     API_DOWN,
     BUSY,
     DOWNLOAD_FAILED,
     HELP,
+    MENU_TEXT,
     NO_QUESTION,
+    TANYA_TEXT,
     TEXT_ONLY,
     WELCOME,
+    ChatHistory,
+    SESSION_NEEDED,
+    STARTING,
     Cooldown,
     format_answer,
+    session_expired_text,
     split_message,
 )
 
@@ -46,8 +55,12 @@ class ApiClient:
         headers = {"X-API-Key": settings.bot_api_key} if settings.bot_api_key else {}
         self._http = httpx.AsyncClient(base_url=settings.api_base_url, headers=headers, timeout=90)
 
-    async def ask(self, question: str, user_ref: str) -> dict:
-        r = await self._http.post("/api/ask", json={"question": question, "channel": "telegram", "user_ref": user_ref})
+    async def ask(self, question: str, user_ref: str, history: list[tuple[str, str]] | None = None) -> dict:
+        payload = {
+            "question": question, "channel": "telegram", "user_ref": user_ref,
+            "history": [{"question": q, "answer": a} for q, a in history or []],
+        }
+        r = await self._http.post("/api/ask", json=payload)
         r.raise_for_status()
         return r.json()
 
@@ -85,44 +98,179 @@ def _api(context: ContextTypes.DEFAULT_TYPE) -> ApiClient:
     return context.application.bot_data["api"]
 
 
+def _history(context: ContextTypes.DEFAULT_TYPE) -> ChatHistory:
+    return context.application.bot_data["history"]
+
+
+def _sessions(context: ContextTypes.DEFAULT_TYPE) -> Sessions:
+    return context.application.bot_data["sessions"]
+
+
+def start_button() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([[InlineKeyboardButton("▶️ Mulai lagi", callback_data="session:start")]])
+
+
+START_GUARD_SECONDS = 3  # /start atau "Mulai lagi" yang ditekan berulang dalam waktu sependek ini diabaikan
+
+
+async def _begin_session(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Mulai percakapan baru: riwayat dikosongkan, sambutan dan menu ditampilkan."""
+    user, chat = update.effective_user, update.effective_chat
+    guard: Cooldown = context.application.bot_data["start_guard"]
+    if not guard.allow(user.id):  # klik ganda / /start beruntun: jangan kirim sambutan dua kali
+        query = getattr(update, "callback_query", None)
+        if query is not None:
+            await query.answer(STARTING)
+        else:
+            await update.effective_message.reply_text(STARTING)
+        return
+    _history(context).clear(user.id)
+    _sessions(context).touch(user.id, chat.id)
+    await update.effective_message.reply_text(WELCOME, reply_markup=main_menu())
+
+
+async def _session_ok(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    """True bila sesi aktif (dan diperpanjang). Di grup tidak ada sesi. Selain itu minta pengguna /start dulu."""
+    if update.effective_chat.type != ChatType.PRIVATE:
+        return True
+    user, chat = update.effective_user, update.effective_chat
+    sessions = _sessions(context)
+    if sessions.is_active(user.id):
+        sessions.touch(user.id, chat.id)
+        return True
+    query = getattr(update, "callback_query", None)
+    if query is not None:
+        await query.answer("Sesi berakhir. Kirim /start untuk memulai lagi.", show_alert=True)
+    await update.effective_message.reply_text(SESSION_NEEDED, reply_markup=start_button())
+    return False
+
+
 # --- handler ------------------------------------------------------------------------------------
 
+def main_menu(home: bool = False) -> InlineKeyboardMarkup:
+    """Tombol untuk perintah bot; mengetik pertanyaan langsung tetap bisa kapan saja.
+
+    home=True menambah tombol kembali ke pesan sambutan (untuk tampilan selain sambutan itu sendiri).
+    """
+    rows = [
+        [InlineKeyboardButton("❓ Tanya", callback_data="menu:tanya"),
+         InlineKeyboardButton("ℹ️ Bantuan", callback_data="menu:help")],
+        [InlineKeyboardButton("👥 Tentang Kami", callback_data="menu:about")],
+    ]
+    if home:
+        rows.append([InlineKeyboardButton("🏠 Beranda", callback_data="menu:home")])
+    return InlineKeyboardMarkup(rows)
+
+
+def help_menu() -> InlineKeyboardMarkup:
+    """Tombol di tampilan Bantuan: satu tombol untuk tiap perintah yang tertulis di sana (selain /help)."""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("❓ Tanya", callback_data="menu:tanya"),
+         InlineKeyboardButton("👥 Tentang Kami", callback_data="menu:about")],
+        [InlineKeyboardButton("📋 Menu", callback_data="menu:main"),
+         InlineKeyboardButton("🏠 Beranda", callback_data="menu:home")],
+    ])
+
+
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(WELCOME)
+    await _begin_session(update, context)
+
+
+async def on_session_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Tombol "Mulai lagi" setelah sesi berakhir."""
+    query = update.callback_query
+    await query.answer()
+    await _begin_session(update, context)
+    try:  # tombolnya dihapus dari pesan pemberitahuan supaya tidak bisa ditekan dua kali
+        await query.edit_message_reply_markup(reply_markup=None)
+    except BadRequest:
+        pass
+
+
+async def cmd_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await _session_ok(update, context):
+        return
+    await update.message.reply_text(MENU_TEXT, reply_markup=main_menu())
 
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(HELP)
+    if not await _session_ok(update, context):
+        return
+    await update.message.reply_text(HELP, reply_markup=help_menu())
+
+
+async def cmd_about(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await _session_ok(update, context):
+        return
+    await update.message.reply_text(ABOUT, reply_markup=main_menu())
 
 
 async def cmd_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"ID Telegram kamu: {update.effective_user.id}")
 
 
+async def on_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Tombol menu: mengganti isi pesan menu yang sama; tombolnya tetap tampil."""
+    query = update.callback_query
+    if not await _session_ok(update, context):
+        return
+    await query.answer()
+    target = query.data.split(":", 1)[1]
+    views = {
+        "tanya": (TANYA_TEXT, main_menu(home=True)),
+        "help": (HELP, help_menu()),
+        "about": (ABOUT, main_menu(home=True)),
+        "home": (WELCOME, main_menu()),
+    }
+    text, markup = views.get(target, (MENU_TEXT, main_menu()))
+    try:
+        await query.edit_message_text(text, reply_markup=markup)
+    except BadRequest:  # tombol yang sama ditekan lagi: isi pesan tidak berubah
+        pass
+
+
 async def answer_question(update: Update, context: ContextTypes.DEFAULT_TYPE, question: str):
     user = update.effective_user
+    message = update.effective_message  # bisa dari pesan ketikan maupun dari tombol
     cooldown: Cooldown = context.application.bot_data["cooldown"]
     if not cooldown.allow(user.id):
-        await update.message.reply_text(BUSY)
+        await message.reply_text(BUSY)
         return
 
+    if update.effective_chat.type != ChatType.PRIVATE:  # sesi hanya untuk chat pribadi
+        await _answer(update, context, question)
+        return
+    sessions, chat_id = _sessions(context), update.effective_chat.id
+    sessions.begin_work(user.id, chat_id)  # jangan akhiri sesi selagi jawaban diproses
+    try:
+        await _answer(update, context, question)
+    finally:
+        sessions.end_work(user.id, chat_id)  # hitung mundur sesi mulai dari saat jawaban terkirim
+
+
+async def _answer(update: Update, context: ContextTypes.DEFAULT_TYPE, question: str):
+    user = update.effective_user
+    message = update.effective_message
     await context.bot.send_chat_action(update.effective_chat.id, ChatAction.TYPING)
     try:
-        result = await _api(context).ask(question, user_ref=str(user.id))
+        result = await _api(context).ask(question, user_ref=str(user.id), history=_history(context).get(user.id))
     except httpx.HTTPStatusError as exc:
         log.warning("API menolak permintaan: %s %s", exc.response.status_code, exc.response.text[:200])
-        await update.message.reply_text(API_DOWN)
+        await message.reply_text(API_DOWN)
         return
     except httpx.HTTPError as exc:
         log.warning("API tidak terjangkau: %s", exc)
-        await update.message.reply_text(API_DOWN)
+        await message.reply_text(API_DOWN)
         return
+
+    if result.get("status") in ("answered", "not_found"):
+        _history(context).add(user.id, question, result.get("answer", ""))
 
     parts = split_message(format_answer(result))
     keyboard = build_keyboard(result)
     for i, part in enumerate(parts):
         last = i == len(parts) - 1
-        await update.message.reply_text(part, reply_markup=keyboard if last else None, disable_web_page_preview=True)
+        await message.reply_text(part, reply_markup=keyboard if last else None, disable_web_page_preview=True)
 
 
 def build_keyboard(result: dict) -> InlineKeyboardMarkup | None:
@@ -144,6 +292,8 @@ def build_keyboard(result: dict) -> InlineKeyboardMarkup | None:
 
 
 async def cmd_tanya(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await _session_ok(update, context):
+        return
     question = " ".join(context.args or []).strip()
     if not question:
         await update.message.reply_text(NO_QUESTION)
@@ -156,6 +306,8 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return  # di grup hanya merespons /tanya
     text = (update.message.text or "").strip()
     if not text:
+        return
+    if not await _session_ok(update, context):
         return
     await answer_question(update, context, text)
 
@@ -245,9 +397,19 @@ async def _post_init(app: Application):
     settings: Settings = app.bot_data["settings"]
     app.bot_data["api"] = ApiClient(settings)
     app.bot_data["cooldown"] = Cooldown(settings.bot_cooldown_seconds)
+    app.bot_data["history"] = ChatHistory()
+    app.bot_data["start_guard"] = Cooldown(START_GUARD_SECONDS)
+
+    async def on_expire(user_id: int, chat_id: int) -> None:
+        app.bot_data["history"].clear(user_id)
+        await app.bot.send_message(chat_id, session_expired_text(settings.session_timeout_seconds), reply_markup=start_button())
+
+    app.bot_data["sessions"] = Sessions(settings.session_timeout_seconds, on_expire)
     await app.bot.set_my_commands([
         ("start", "Mulai dan cara pakai"),
+        ("menu", "Tampilkan tombol menu"),
         ("tanya", "Tanya informasi akademik atau tugas akhir"),
+        ("about", "Tentang Tanya Kampus dan tim pengembang"),
         ("help", "Bantuan"),
     ])
 
@@ -273,6 +435,10 @@ def build_application(settings: Settings) -> Application:
     app.add_handler(CommandHandler("help", cmd_help))
     app.add_handler(CommandHandler("id", cmd_id))
     app.add_handler(CommandHandler("tanya", cmd_tanya))
+    app.add_handler(CommandHandler("menu", cmd_menu))
+    app.add_handler(CommandHandler("about", cmd_about))
+    app.add_handler(CallbackQueryHandler(on_session_start, pattern=r"^session:start$"))
+    app.add_handler(CallbackQueryHandler(on_menu, pattern=r"^menu:[a-z]+$"))
     app.add_handler(CallbackQueryHandler(on_feedback, pattern=r"^fb:\d+:-?1$"))
     app.add_handler(CallbackQueryHandler(on_download, pattern=r"^dl:\d+$"))
     app.add_handler(MessageHandler(filters.Document.ALL, on_document))

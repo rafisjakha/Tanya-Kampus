@@ -17,10 +17,21 @@ from dataclasses import dataclass, field
 from ..config import Settings
 from ..db import db, get_index_version
 from .llm import LLMClient, LLMError
-from .prompt import CHAT_PROMPT, NOT_FOUND_MESSAGE, NOT_FOUND_TOKEN, SYSTEM_PROMPT, build_prompt
+from .prompt import (
+    CHAT_PROMPT,
+    NOT_FOUND_MESSAGE,
+    NOT_FOUND_TOKEN,
+    REWRITE_PROMPT,
+    SYSTEM_PROMPT,
+    build_prompt,
+    build_rewrite_prompt,
+)
 from .search import Hit, Retriever
 
 CHAT_MAX_WORDS = 30  # pesan lebih panjang langsung memakai pesan 'tidak ditemukan' baku (hemat kuota)
+REWRITE_MAX_WORDS = 15  # pesan lebih panjang dianggap sudah berdiri sendiri (tanpa panggilan LLM tambahan)
+HISTORY_MAX_TURNS = 3
+HISTORY_MAX_CHARS = 300
 _CITATION_RE = re.compile(r"\[\d+\]")
 ERROR_MESSAGE = "Maaf, layanan jawaban sedang bermasalah. Coba lagi beberapa saat lagi."
 _CITE_RE = re.compile(r"\[(\d+)\]")
@@ -36,6 +47,7 @@ class AskResult:
     top_score: float | None = None
     cached: bool = False
     hits: list[dict] = field(default_factory=list)
+    standalone_question: str | None = None  # hasil tulis ulang pesan lanjutan, bila ada
 
     def to_dict(self, include_debug: bool = False) -> dict:
         data = {
@@ -49,6 +61,7 @@ class AskResult:
         }
         if include_debug:
             data["hits"] = self.hits
+            data["standalone_question"] = self.standalone_question
         return data
 
 
@@ -131,6 +144,24 @@ class Pipeline:
             )
             return int(cur.lastrowid)
 
+    def _standalone(self, question: str, history: list[tuple[str, str]] | None) -> str:
+        """Tulis ulang pesan lanjutan ("kalo hari kamis?") menjadi pertanyaan lengkap memakai riwayat chat.
+
+        Satu panggilan LLM, hanya bila ada riwayat dan pesannya pendek. Gagal atau hasilnya janggal: pakai pesan asli.
+        """
+        if not history or len(question.split()) > REWRITE_MAX_WORDS:
+            return question
+        turns = [(q[:HISTORY_MAX_CHARS], a[:HISTORY_MAX_CHARS]) for q, a in history[-HISTORY_MAX_TURNS:]]
+        try:
+            raw = self.llm.generate(REWRITE_PROMPT, build_rewrite_prompt(turns, question))
+        except LLMError:
+            return question
+        lines = raw.strip().splitlines()
+        text = " ".join(lines[0].split()).strip(" \"'") if lines else ""
+        if not text or text.startswith(NOT_FOUND_TOKEN) or _CITATION_RE.search(text):
+            return question
+        return text[: self.settings.max_question_chars]
+
     def _llm_fallback(self, question: str) -> tuple[str, str]:
         """Balasan LLM saat dokumen tidak menjawab: ("answered", obrolan ringan) atau ("not_found", pesan ramah)."""
         if len(question.split()) > CHAT_MAX_WORDS:
@@ -156,10 +187,13 @@ class Pipeline:
         category: str | None = None,
         channel: str = "api",
         user_ref: str | None = None,
+        history: list[tuple[str, str]] | None = None,
     ) -> AskResult:
         started = time.perf_counter()
         question = " ".join(question.split())[: self.settings.max_question_chars]
         category = category or None
+
+        standalone: str | None = None
 
         def finish(status, answer, sources=None, top=None, cached=False, error=None, hits=None):
             qid = self._log(
@@ -167,35 +201,40 @@ class Pipeline:
                 status=status, answer=answer, top_score=top, sources=sources or [],
                 latency_ms=int((time.perf_counter() - started) * 1000), cached=cached, error=error,
             )
-            return AskResult(qid, status, answer, sources or [], top, cached, hits or [])
+            return AskResult(qid, status, answer, sources or [], top, cached, hits or [], standalone)
 
         if not question:
             return finish("not_found", NOT_FOUND_MESSAGE)
 
+        # 0. pesan lanjutan dilengkapi dari riwayat chat; log tetap mencatat pesan asli
+        search_q = self._standalone(question, history)
+        if search_q != question:
+            standalone = search_q
+
         # 1. cache jawaban untuk pertanyaan yang sama pada versi indeks yang sama
         with db() as conn:
-            key = self._cache_key(conn, question, category)
+            key = self._cache_key(conn, search_q, category)
             cached = self._cache_get(conn, key)
         if cached:
             return finish("answered", cached["answer"], json.loads(cached["sources_json"]),
                           cached["top_score"], cached=True)
 
         # 2. retrieval + ambang skor
-        hits = self.retriever.search(question, category=category)
+        hits = self.retriever.search(search_q, category=category)
         debug_hits = [h.to_debug() for h in hits]
         top = hits[0].score if hits else None
         if not hits or top < self.settings.score_threshold:
-            status, text = self._llm_fallback(question)
+            status, text = self._llm_fallback(search_q)
             return finish(status, text, top=top, hits=debug_hits)
 
         # 3. generate
         try:
-            raw = self.llm.generate(SYSTEM_PROMPT, build_prompt(question, hits))
+            raw = self.llm.generate(SYSTEM_PROMPT, build_prompt(search_q, hits))
         except LLMError as exc:
             return finish("error", ERROR_MESSAGE, top=top, error=str(exc), hits=debug_hits)
 
         if raw.strip().strip(".").upper() == NOT_FOUND_TOKEN or raw.strip().startswith(NOT_FOUND_TOKEN):
-            status, text = self._llm_fallback(question)
+            status, text = self._llm_fallback(search_q)
             return finish(status, text, top=top, hits=debug_hits)
 
         sources = _cited_sources(raw, hits)

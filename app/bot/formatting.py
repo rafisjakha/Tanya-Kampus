@@ -10,9 +10,7 @@ WELCOME = (
     "Halo! Saya Tanya Kampus.\n\n"
     "Saya membantu mencari informasi akademik dan tugas akhir dari dokumen resmi kampus, "
     "lengkap dengan sumbernya.\n\n"
-    "Cara pakai:\n"
-    "- Ketik pertanyaanmu langsung, atau\n"
-    "- Pakai /tanya <pertanyaan>, contoh: /tanya Bagaimana cara mengajukan cuti akademik?\n\n"
+    "Cara pakai: ketik pertanyaanmu langsung di kolom chat, contoh: Bagaimana cara mengajukan cuti akademik?\n\n"
     "Jawaban hanya berdasarkan dokumen yang tersedia. Untuk hal yang menentukan (jadwal, "
     "batas waktu, persyaratan), selalu cocokkan dengan bagian akademik.\n\n"
     "Privasi: pertanyaanmu dicatat bersama ID Telegram untuk memperbaiki layanan."
@@ -20,40 +18,69 @@ WELCOME = (
 
 HELP = (
     "Perintah:\n"
+    "/menu : tampilkan tombol menu\n"
+    "/about : tentang Tanya Kampus dan tim pengembang\n"
     "/tanya <pertanyaan> : tanya informasi akademik atau tugas akhir\n"
-    "/id : tampilkan ID Telegram kamu\n"
     "/help : bantuan ini\n\n"
     "Di chat pribadi, kamu bisa langsung mengetik pertanyaan tanpa perintah."
 )
+
+MENU_TEXT = "Pilih menu di bawah, atau langsung ketik pertanyaanmu."
+
+TANYA_TEXT = (
+    "Ketik pertanyaanmu langsung di kolom chat.\n\n"
+    "Contoh: Apa saja syarat sidang tugas akhir?"
+)
+
+ABOUT = (
+    "Tentang Tanya Kampus\n\n"
+    "Tanya Kampus adalah chatbot Telegram berbasis RAG (Retrieval-Augmented Generation) yang membantu mahasiswa "
+    "mendapatkan jawaban atas pertanyaan akademik dan tugas akhir/skripsi dengan cepat. Jawabannya hanya berdasarkan "
+    "dokumen resmi Prodi Teknologi Informasi yang sudah dipublikasikan, lengkap dengan sumbernya.\n\n"
+    "Kenapa dibuat? Buku panduan akademik, SOP administratif, dan pedoman tugas akhir tersebar di berbagai kanal "
+    "dan direvisi tiap tahun ajaran, sehingga informasi di grup percakapan sering simpang siur atau sudah tidak "
+    "berlaku. Tanya Kampus menjadi kanal tanya-jawab otomatis yang konsisten, sekaligus mengurangi beban staf Prodi "
+    "yang harus menjawab pertanyaan serupa berulang kali.\n\n"
+    "Mitra: Program Studi S1 Teknologi Informasi, Universitas Telkom Jakarta "
+    "(Kaprodi: Hartanto Suryoprayogo, S.Kom., M.Kom.)\n\n"
+    "Tim pengembang (Kelompok TK, Mata Kuliah Proyek TI):\n"
+    "- Muhammad Raihan Fadani (Project Manager)\n"
+    "- Muhammad Raia Pratama Putra Wibowo\n"
+    "- Agil Naufal Al Habib Gurning\n"
+    "- Rafi Athallah Sjakha\n"
+    "- David Chandra\n\n"
+    "Dosen pengampu: Syifa Nurgaida Yutia, S.Tr., M.T."
+)
+
+def _duration(seconds: float) -> str:
+    seconds = int(seconds)
+    return f"{seconds // 60} menit" if seconds >= 60 and seconds % 60 == 0 else f"{seconds} detik"
+
+
+def session_expired_text(timeout: float) -> str:
+    return (
+        f"Sesi percakapan berakhir karena tidak ada aktivitas selama {_duration(timeout)}. "
+        "Tekan tombol di bawah atau kirim /start untuk memulai lagi."
+    )
+
+
+SESSION_NEEDED = "Sesi belum dimulai atau sudah berakhir. Tekan tombol di bawah atau kirim /start untuk memulai."
 
 TEXT_ONLY = "Saya hanya bisa membaca pesan teks. Ketik pertanyaanmu ya, contoh: Apa syarat sidang tugas akhir?"
 DOWNLOAD_FAILED = "Maaf, file tidak bisa dikirim saat ini. Silakan ambil dari sumber resmi kampus."
 NO_QUESTION = "Tulis pertanyaannya setelah perintah, contoh:\n/tanya Apa saja syarat sidang tugas akhir?"
 BUSY = "Tunggu sebentar sebelum bertanya lagi."
+STARTING = "Sedang diproses, tunggu sebentar ya."
 API_DOWN = "Maaf, layanan sedang tidak bisa dihubungi. Coba lagi beberapa saat lagi."
 
 
-def format_sources(sources: list[dict]) -> str:
-    lines = []
-    for s in sources:
-        parts = s.get("heading", "").split(" > ")
-        section = " > ".join(parts[1:]) if len(parts) > 1 else ""
-        line = f"[{s['n']}] {s['title']}"
-        if section:
-            line += f" > {section}"
-        if s.get("effective_date"):
-            line += f" (berlaku {s['effective_date']})"
-        if s.get("url"):
-            line += f"\n    {s['url']}"
-        lines.append(line)
-    return "\n".join(lines)
+_CITATION_RE = re.compile(r"[ \t]*(?:\[\d+\])+")
 
 
 def format_answer(result: dict) -> str:
-    text = result["answer"].strip()
-    if result.get("status") == "answered" and result.get("sources"):
-        text += "\n\nSumber:\n" + format_sources(result["sources"])
-    return text
+    """Teks jawaban untuk Telegram. Penanda sumber [1] dibuang karena daftar sumber tidak ditampilkan."""
+    text = _CITATION_RE.sub("", result["answer"])
+    return re.sub(r"[ \t]+([.,;:!?])", r"\1", text).strip()
 
 
 def split_message(text: str, limit: int = TELEGRAM_LIMIT) -> list[str]:
@@ -90,3 +117,34 @@ class Cooldown:
             cutoff = now - self.seconds
             self._last = {k: v for k, v in self._last.items() if v >= cutoff}
         return True
+
+
+class ChatHistory:
+    """Riwayat tanya-jawab singkat per pengguna (di memori) supaya pesan lanjutan bisa dipahami.
+
+    Hanya beberapa giliran terakhir dan kedaluwarsa setelah `ttl` detik tanpa pesan baru; hilang saat bot restart.
+    """
+
+    def __init__(self, ttl: float = 600, max_turns: int = 3, clock=time.monotonic):
+        self.ttl, self.max_turns, self._clock = ttl, max_turns, clock
+        self._turns: dict[int, list[tuple[float, str, str]]] = {}
+
+    def get(self, user_id: int) -> list[tuple[str, str]]:
+        now = self._clock()
+        turns = [t for t in self._turns.get(user_id, []) if now - t[0] < self.ttl]
+        if turns:
+            self._turns[user_id] = turns
+        else:
+            self._turns.pop(user_id, None)
+        return [(q, a) for _, q, a in turns]
+
+    def add(self, user_id: int, question: str, answer: str) -> None:
+        now = self._clock()
+        turns = [t for t in self._turns.get(user_id, []) if now - t[0] < self.ttl]
+        turns.append((now, question, answer))
+        self._turns[user_id] = turns[-self.max_turns:]
+        if len(self._turns) > 5000:  # bersihkan pengguna yang sudah lama diam
+            self._turns = {u: ts for u, ts in self._turns.items() if ts and now - ts[-1][0] < self.ttl}
+
+    def clear(self, user_id: int) -> None:
+        self._turns.pop(user_id, None)

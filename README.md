@@ -119,9 +119,9 @@ Login dengan `ADMIN_USERNAME` dan `ADMIN_PASSWORD` dari `.env`. Admin dibuat oto
 1. Di Telegram, chat ke [@BotFather](https://t.me/BotFather), kirim `/newbot`, pilih nama dan username (berakhiran `bot`). Salin token-nya ke `TELEGRAM_TOKEN` di `.env`.
 2. Pastikan `BOT_API_KEY` terisi (nilainya dipakai bersama oleh bot dan API) dan API sedang jalan.
 3. Di terminal lain: `python -m app.bot.telegram_bot`
-4. Buka bot di Telegram, kirim `/start`, lalu tanyakan sesuatu.
+4. Buka bot di Telegram, kirim `/start`. Akan muncul tombol menu (Tanya, Bantuan, Tentang Kami; di tampilan Bantuan tombolnya berganti jadi perintah), atau langsung ketik pertanyaanmu. Menu juga bisa dipanggil lewat `/menu`, dan info tim lewat `/about`.
 
-Sapaan dan obrolan ringan dijawab Gemini (tanpa sumber), bot menolak pesan non-teks dengan ramah, dan membatasi frekuensi tanya per pengguna (`BOT_COOLDOWN_SECONDS`).
+Sesi percakapan berakhir otomatis bila pengguna diam 1 menit (`SESSION_TIMEOUT_SECONDS`, 0 = nonaktif); bot memberi tahu dan pengguna menekan **Mulai lagi** atau `/start`. Pesan lanjutan seperti "kalo hari kamis?" dilengkapi dari riwayat chat (di sesi yang sama) lewat satu panggilan Gemini tambahan. Sapaan dan obrolan ringan dijawab Gemini (tanpa sumber), bot menolak pesan non-teks dengan ramah, dan membatasi frekuensi tanya per pengguna (`BOT_COOLDOWN_SECONDS`).
 
 Untuk fitur kirim file sebagai admin: kirim `/id` ke bot, masukkan angkanya ke `ADMIN_TELEGRAM_IDS`, restart bot. File yang dikirim menjadi **draft**; tinjau dan klik Index di panel admin. Judul diambil dari caption file.
 

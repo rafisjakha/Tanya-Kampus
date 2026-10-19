@@ -1,16 +1,16 @@
 from app.bot.formatting import Cooldown, format_answer, split_message
 
 
-def test_format_answer_dengan_sumber():
+def test_format_answer_tanpa_daftar_sumber_dan_tanpa_penanda():
     result = {
         "status": "answered",
-        "answer": "Cuti diajukan dua minggu sebelum kuliah [1].",
+        "answer": "Cuti diajukan dua minggu sebelum kuliah [1].\n- Syarat A [1][2]\n- Syarat B [2]",
         "sources": [{"n": 1, "title": "Panduan Akademik", "heading": "Panduan Akademik > Cuti Akademik",
                      "effective_date": "2026-01-01", "url": None}],
     }
     text = format_answer(result)
-    assert text.startswith("Cuti diajukan")
-    assert "Sumber:\n[1] Panduan Akademik > Cuti Akademik (berlaku 2026-01-01)" in text
+    assert text == "Cuti diajukan dua minggu sebelum kuliah.\n- Syarat A\n- Syarat B"
+    assert "Sumber" not in text and "[" not in text
 
 
 def test_format_answer_tidak_ditemukan_tanpa_sumber():
