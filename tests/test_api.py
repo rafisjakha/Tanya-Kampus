@@ -274,3 +274,28 @@ def test_pertanyaan_panjang_dengan_riwayat_tidak_ditulis_ulang(client, indexed_d
     client.post("/api/ask", headers={"X-API-Key": "bot-key-tes"},
                 json={"question": q, "history": [{"question": "a", "answer": "b"}]})
     assert "RIWAYAT:" not in stub_llm.last_prompt
+
+
+def test_hari_ini_diganti_nama_hari_dan_waktu_server_masuk_prompt(client, indexed_doc, stub_llm):
+    from datetime import datetime, timedelta, timezone
+
+    from app import deps
+
+    pipeline = client.app.dependency_overrides[deps.get_pipeline]()
+    senin = datetime(2026, 10, 19, 14, 35, tzinfo=timezone(timedelta(hours=7)))
+    pipeline.ask("Kapan batas pengajuan cuti akademik hari ini?", now=senin)
+    assert "PERTANYAAN: Kapan batas pengajuan cuti akademik hari Senin?" in stub_llm.last_prompt
+    assert "WAKTU SEKARANG: Senin, 19 Oktober 2026, pukul 14.35 WIB" in stub_llm.last_prompt
+
+
+def test_jawaban_yang_bergantung_waktu_tidak_dicache(client, indexed_doc, stub_llm):
+    from app import deps
+
+    pipeline = client.app.dependency_overrides[deps.get_pipeline]()
+    q = "Kapan batas pengajuan cuti akademik selanjutnya?"
+    pipeline.ask(q)
+    second = pipeline.ask(q)
+    assert second.cached is False
+    plain = "Kapan batas pengajuan cuti akademik?"
+    pipeline.ask(plain)
+    assert pipeline.ask(plain).cached is True

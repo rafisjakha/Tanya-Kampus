@@ -34,4 +34,5 @@ pillow>=10.0
 python-telegram-bot>=21.0
 
 # Konfigurasi
+tzdata  # database zona waktu (Windows tidak punya bawaan)
 python-dotenv>=1.0

@@ -14,8 +14,11 @@ import re
 import time
 from dataclasses import dataclass, field
 
+from datetime import datetime
+
 from ..config import Settings
 from ..db import db, get_index_version
+from .clock import describe_now, now_local, resolve_relative_days
 from .llm import LLMClient, LLMError
 from .prompt import (
     CHAT_PROMPT,
@@ -32,6 +35,8 @@ CHAT_MAX_WORDS = 30  # pesan lebih panjang langsung memakai pesan 'tidak ditemuk
 REWRITE_MAX_WORDS = 15  # pesan lebih panjang dianggap sudah berdiri sendiri (tanpa panggilan LLM tambahan)
 HISTORY_MAX_TURNS = 3
 HISTORY_MAX_CHARS = 300
+# jawaban yang bergantung pada waktu sekarang tidak boleh dipakai ulang dari cache
+_TIME_SENSITIVE_RE = re.compile(r"\b(selanjutnya|berikutnya|nanti|tanggal|jam\s+berapa|jam\s+\d{2}\.\d{2}|minggu\s+ini|bulan\s+ini)\b", re.I)
 _CITATION_RE = re.compile(r"\[\d+\]")
 ERROR_MESSAGE = "Maaf, layanan jawaban sedang bermasalah. Coba lagi beberapa saat lagi."
 _CITE_RE = re.compile(r"\[(\d+)\]")
@@ -162,12 +167,13 @@ class Pipeline:
             return question
         return text[: self.settings.max_question_chars]
 
-    def _llm_fallback(self, question: str) -> tuple[str, str]:
+    def _llm_fallback(self, question: str, now_text: str | None = None) -> tuple[str, str]:
         """Balasan LLM saat dokumen tidak menjawab: ("answered", obrolan ringan) atau ("not_found", pesan ramah)."""
         if len(question.split()) > CHAT_MAX_WORDS:
             return "not_found", NOT_FOUND_MESSAGE
         try:
-            raw = self.llm.generate(CHAT_PROMPT, question).strip()
+            prompt = f"WAKTU SEKARANG: {now_text}\n\nPESAN: {question}" if now_text else question
+            raw = self.llm.generate(CHAT_PROMPT, prompt).strip()
         except LLMError:
             return "not_found", NOT_FOUND_MESSAGE
         if raw.startswith(NOT_FOUND_TOKEN):
@@ -188,6 +194,7 @@ class Pipeline:
         channel: str = "api",
         user_ref: str | None = None,
         history: list[tuple[str, str]] | None = None,
+        now: datetime | None = None,
     ) -> AskResult:
         started = time.perf_counter()
         question = " ".join(question.split())[: self.settings.max_question_chars]
@@ -210,11 +217,16 @@ class Pipeline:
         search_q = self._standalone(question, history)
         if search_q != question:
             standalone = search_q
+        # waktu server: "hari ini"/"besok"/"sekarang" diganti nama hari sebenarnya (baris jadwal memuat nama hari)
+        now = now or now_local(self.settings.timezone)
+        now_text = describe_now(now, self.settings.timezone)
+        search_q = resolve_relative_days(search_q, now)
 
         # 1. cache jawaban untuk pertanyaan yang sama pada versi indeks yang sama
+        time_sensitive = bool(_TIME_SENSITIVE_RE.search(search_q))
         with db() as conn:
             key = self._cache_key(conn, search_q, category)
-            cached = self._cache_get(conn, key)
+            cached = None if time_sensitive else self._cache_get(conn, key)
         if cached:
             return finish("answered", cached["answer"], json.loads(cached["sources_json"]),
                           cached["top_score"], cached=True)
@@ -224,20 +236,21 @@ class Pipeline:
         debug_hits = [h.to_debug() for h in hits]
         top = hits[0].score if hits else None
         if not hits or top < self.settings.score_threshold:
-            status, text = self._llm_fallback(search_q)
+            status, text = self._llm_fallback(search_q, now_text)
             return finish(status, text, top=top, hits=debug_hits)
 
         # 3. generate
         try:
-            raw = self.llm.generate(SYSTEM_PROMPT, build_prompt(search_q, hits))
+            raw = self.llm.generate(SYSTEM_PROMPT, build_prompt(search_q, hits, now_text))
         except LLMError as exc:
             return finish("error", ERROR_MESSAGE, top=top, error=str(exc), hits=debug_hits)
 
         if raw.strip().strip(".").upper() == NOT_FOUND_TOKEN or raw.strip().startswith(NOT_FOUND_TOKEN):
-            status, text = self._llm_fallback(search_q)
+            status, text = self._llm_fallback(search_q, now_text)
             return finish(status, text, top=top, hits=debug_hits)
 
         sources = _cited_sources(raw, hits)
         with db() as conn:
-            self._cache_put(conn, key, raw, sources, top)
+            if not time_sensitive:
+                self._cache_put(conn, key, raw, sources, top)
         return finish("answered", raw, sources, top, hits=debug_hits)
