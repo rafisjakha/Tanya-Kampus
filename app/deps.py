@@ -37,5 +37,5 @@ def get_pipeline() -> Pipeline:
     try:
         return _pipeline()
     except (ValueError, RuntimeError) as exc:
-        # mis. GEMINI_API_KEY belum diset. Jangan di-cache supaya langsung pulih setelah .env diperbaiki.
+        # mis. GROQ_API_KEY / GEMINI_API_KEY belum diset. Jangan di-cache supaya langsung pulih setelah .env diperbaiki.
         raise HTTPException(503, str(exc))

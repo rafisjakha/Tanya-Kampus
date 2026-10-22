@@ -83,6 +83,8 @@ class Settings:
     llm_provider: str
     gemini_api_key: str | None
     gemini_model: str
+    groq_api_key: str | None
+    groq_model: str
     # Retrieval
     top_k: int
     semantic_weight: float
@@ -108,6 +110,11 @@ class Settings:
     def raw_dir(self) -> Path:
         return self.data_dir / "raw"
 
+    @property
+    def llm_model(self) -> str:
+        """Nama model LLM yang aktif, untuk ditampilkan (panel admin, doctor)."""
+        return {"gemini": self.gemini_model, "groq": self.groq_model}.get(self.llm_provider, self.llm_provider)
+
     @classmethod
     def from_env(cls) -> "Settings":
         model = _get("EMBEDDING_MODEL", "intfloat/multilingual-e5-small") or ""
@@ -119,6 +126,9 @@ class Settings:
         origins = tuple(
             o.strip() for o in (_get("CORS_ORIGINS", "") or "").split(",") if o.strip()
         )
+        groq_key = _get("GROQ_API_KEY")
+        # LLM_PROVIDER kosong: pakai Groq bila kuncinya ada, selain itu Gemini (supaya .env lama tetap jalan)
+        provider = (_get("LLM_PROVIDER") or ("groq" if groq_key else "gemini")).lower()
         return cls(
             data_dir=data_dir,
             secret_key=_get("SECRET_KEY", DEFAULT_SECRET) or DEFAULT_SECRET,
@@ -137,9 +147,11 @@ class Settings:
             embedding_model=model,
             embedding_query_prefix=q_default if q_prefix is None else q_prefix,
             embedding_passage_prefix=p_default if p_prefix is None else p_prefix,
-            llm_provider=(_get("LLM_PROVIDER", "gemini") or "").lower(),
+            llm_provider=provider,
             gemini_api_key=_get("GEMINI_API_KEY"),
             gemini_model=_get("GEMINI_MODEL", "gemini-3.6-flash") or "gemini-3.6-flash",
+            groq_api_key=groq_key,
+            groq_model=_get("GROQ_MODEL", "llama-3.3-70b-versatile") or "llama-3.3-70b-versatile",
             top_k=_get_int("TOP_K", 5),
             semantic_weight=_get_float("SEMANTIC_WEIGHT", 0.6),
             score_threshold=_get_float("SCORE_THRESHOLD", 0.5),

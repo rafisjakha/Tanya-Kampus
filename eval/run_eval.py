@@ -2,7 +2,7 @@
 
     python -m eval.run_eval                       # retrieval saja, tanpa LLM (gratis)
     python -m eval.run_eval --csv eval/mine.csv   # pakai test set sendiri
-    python -m eval.run_eval --llm                 # sekaligus jalankan pipeline penuh (memakai kuota Gemini)
+    python -m eval.run_eval --llm                 # sekaligus jalankan pipeline penuh (memakai kuota LLM)
 
 Format CSV: question, answerable (yes/no), expected_title (substring judul), expected_keyword
 (substring yang harus ada di salah satu chunk teratas).
