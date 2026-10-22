@@ -131,11 +131,22 @@
   });
 
   $('#btn-logout').addEventListener('click', logout);
+  $('#btn-logout-side').addEventListener('click', logout);
+
+  // menu akun di pojok kanan atas
+  const userBtn = $('#user-btn');
+  const userPop = $('#user-pop');
+  function setUserMenu(open) { userPop.hidden = !open; userBtn.setAttribute('aria-expanded', String(open)); }
+  userBtn.addEventListener('click', () => setUserMenu(userPop.hidden));
+  userPop.addEventListener('click', () => setUserMenu(false));
+  document.addEventListener('click', (e) => { if (!e.target.closest('.user-menu')) setUserMenu(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !userPop.hidden) { setUserMenu(false); userBtn.focus(); } });
 
   async function enterApp(username) {
     $('#view-login').hidden = true;
     $('#view-app').hidden = false;
     $('#whoami').textContent = username || '';
+    $('#avatar').textContent = (username || 'A').trim().charAt(0) || 'A';
     meta = await api('/meta');
     renderMeta();
     await refreshDocs();
@@ -153,8 +164,19 @@
   }
 
   // ---------- tab ----------
+  const PAGES = {
+    docs: ['Ikhtisar', 'Kelola knowledge yang dipakai bot untuk menjawab.'],
+    ask: ['Tes Tanya', 'Coba pertanyaan dan lihat skor tiap chunk sebelum dipakai mahasiswa.'],
+    logs: ['Log', 'Pertanyaan yang masuk dari mahasiswa beserta hasilnya.'],
+  };
+
   function selectTab(name) {
-    $$('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+    $$('.tab').forEach((t) => {
+      t.classList.toggle('active', t.dataset.tab === name);
+      t.setAttribute('aria-selected', String(t.dataset.tab === name));
+    });
+    $('#page-title').textContent = PAGES[name][0];
+    $('#page-sub').textContent = PAGES[name][1];
     $$('.panel').forEach((p) => { p.hidden = p.id !== 'tab-' + name; });
     if (name === 'docs') refreshDocs();
     if (name === 'logs') refreshLogs();
@@ -171,15 +193,78 @@
     } catch (ex) { toast(ex.message, true); }
   }
 
+  // ikon garis sederhana untuk kartu knowledge (path SVG 24x24)
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const ICON_PATHS = {
+    doc: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4',
+    check: 'M20 6 9 17l-5-5',
+    clock: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+  };
+  function svg(tag, attrs, ...children) {
+    const el = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+    el.append(...children);
+    return el;
+  }
+  const icon = (name) => svg('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true' }, svg('path', { d: ICON_PATHS[name] }));
+  const fmtNum = (n) => Number(n || 0).toLocaleString('id-ID');
+
+  // 7 tanggal terakhir (UTC, sama dengan date() di SQLite), lengkap walau ada hari tanpa pertanyaan
+  function lastDays(byDay) {
+    const map = new Map((byDay || []).map((d) => [d.day, d]));
+    const out = [];
+    for (let i = 6; i >= 0; i -= 1) {
+      const key = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10);
+      const d = map.get(key);
+      out.push({ day: key, total: d ? d.total : 0, not_found: d ? d.not_found || 0 : 0 });
+    }
+    return out;
+  }
+
+  function renderChart(days) {
+    const W = 300, H = 92, max = Math.max(1, ...days.map((d) => d.total));
+    const x = (i) => (i / (days.length - 1)) * W;
+    const y = (v) => H - 6 - (v / max) * (H - 16);
+    const pts = (key) => days.map((d, i) => `${x(i).toFixed(1)},${y(d[key]).toFixed(1)}`).join(' ');
+    const chart = svg('svg', { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'none', role: 'img',
+      'aria-label': 'Grafik pertanyaan 7 hari terakhir: ' + days.map((d) => d.total).join(', ') },
+      svg('g', { class: 'grid' }, ...[0.25, 0.5, 0.75].map((f) => svg('line', { x1: 0, x2: W, y1: H * f, y2: H * f }))),
+      svg('polygon', { class: 'area', points: `0,${H} ${pts('total')} ${W},${H}` }),
+      svg('polyline', { class: 'nf', points: pts('not_found') }),
+      svg('polyline', { class: 'line', points: pts('total') }));
+    const last = days[days.length - 1];
+    const pos = `left:100%;top:${(y(last.total) / H) * 100}%`;
+    const fmtDay = (key) => new Date(key + 'T00:00:00Z').toLocaleDateString('id-ID', { weekday: 'short', timeZone: 'UTC' });
+    return h('div', {},
+      h('div', { class: 'chart' }, chart,
+        h('span', { class: 'dot', style: pos }),
+        h('span', { class: 'bubble', style: pos }, `${fmtNum(last.total)} hari ini`)),
+      h('div', { class: 'days' }, days.map((d, i) => h('span', { class: i === days.length - 1 ? 'today' : '' }, fmtDay(d.day)))));
+  }
+
   function renderStats(s) {
-    const card = (n, l, warn) => h('div', { class: 'card stat' + (warn ? ' warn' : '') }, h('div', { class: 'n' }, n), h('div', { class: 'l' }, l));
+    const days = lastDays(s.by_day);
+    const week = days.reduce((a, d) => a + d.total, 0);
+    const rate = s.queries ? Math.round((s.answered / s.queries) * 100) : 0;
+    $('#summary').replaceChildren(
+      h('div', { class: 'summary-top' },
+        h('div', {}, h('div', { class: 'big' }, fmtNum(s.queries)), h('div', { class: 'l' }, 'Pertanyaan masuk')),
+        h('div', { class: 'mini-stats' },
+          h('span', {}, h('b', {}, `${rate}%`), ' terjawab'),
+          h('span', {}, h('b', {}, fmtNum(s.not_found)), ' tidak ditemukan'),
+          h('span', {}, h('b', {}, `${fmtNum(s.feedback_up)} / ${fmtNum(s.feedback_down)}`), ' 👍 / 👎'))),
+      h('div', { class: 'legend' }, h('span', {}, h('i', {}), `${fmtNum(week)} pertanyaan minggu ini`), h('span', {}, h('i', { class: 'nf' }), 'tidak ditemukan')),
+      renderChart(days));
+
+    const pct = s.documents ? Math.round((s.documents_indexed / s.documents) * 100) : 0;
+    const asset = (cls, value, label, sub, ic, delta, deltaCls) => h('div', { class: 'asset ' + cls },
+      h('div', { class: 'big' }, fmtNum(value)), h('div', { class: 'l' }, label), h('div', { class: 's' }, sub),
+      h('div', { class: 'asset-foot' }, h('span', { class: 'asset-icon' }, icon(ic)), h('span', { class: 'delta ' + (deltaCls || '') }, delta)));
     $('#stats').replaceChildren(
-      card(s.documents, 'Dokumen'),
-      card(s.documents_indexed, 'Terindeks'),
-      card(s.documents_need_index, 'Perlu di-index', s.documents_need_index > 0),
-      card(s.chunks, 'Chunk'),
-      card(s.queries, 'Pertanyaan masuk'),
-      card(s.not_found, 'Tidak ditemukan', s.not_found > 0),
+      asset('c1', s.documents, 'Dokumen', `${fmtNum(s.chunks)} chunk`, 'doc', ''),
+      asset('c2', s.documents_indexed, 'Terindeks', 'siap dijawab bot', 'check', `${pct}%`, 'good'),
+      asset('c3', s.documents_need_index, 'Perlu di-index', 'draft atau berubah', 'clock',
+        s.documents_need_index > 0 ? 'cek tabel' : 'beres', s.documents_need_index > 0 ? 'warn' : 'good'),
     );
   }
 
@@ -195,6 +280,7 @@
     $('#docs-empty').textContent = docsCache.length && !list.length
       ? 'Tidak ada dokumen yang cocok dengan pencarian.'
       : 'Belum ada dokumen. Tambahkan lewat Upload file, Dari URL, atau Tulis manual.';
+    $('#docs-count').textContent = list.length === docsCache.length ? list.length : `${list.length} dari ${docsCache.length}`;
     renderDocs(list);
   }
   $('#doc-search').addEventListener('input', applyDocFilter);

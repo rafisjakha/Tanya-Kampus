@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tanya Kampus Admin</title>
   <meta name="color-scheme" content="light dark">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233a55ea'/%3E%3Cstop offset='1' stop-color='%231d2bab'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='10' fill='url(%23g)'/%3E%3Cpath d='M9 12h14M9 17h9' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" href="img/telu-mark.png">
   <link rel="preload" href="fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="fonts/poppins-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/poppins-700.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
   <script src="theme.js"></script>
 </head>
@@ -15,8 +15,11 @@
   <!-- LOGIN -->
   <main id="view-login" class="login" hidden>
     <form id="login-form" class="card login-card" autocomplete="on">
-      <div class="brand brand-lg">Tanya Kampus</div>
-      <p class="muted">Masuk untuk mengelola knowledge chatbot.</p>
+      <div class="login-logo"><img src="img/telu-logo.png" alt="Telkom University" width="98" height="120"></div>
+      <div class="login-head">
+        <h1>Tanya Kampus</h1>
+        <p class="muted">Masuk untuk mengelola knowledge chatbot.</p>
+      </div>
       <label>Username
         <input name="username" autocomplete="username" required autofocus>
       </label>
@@ -29,88 +32,141 @@
   </main>
 
   <!-- APLIKASI -->
-  <div id="view-app" hidden>
-    <header class="topbar">
-      <div class="brand">Tanya Kampus <span class="muted tag">Admin</span></div>
-      <nav class="tabs" role="tablist">
-        <button role="tab" data-tab="docs" class="tab active">Dokumen</button>
-        <button role="tab" data-tab="ask" class="tab">Tes Tanya</button>
-        <button role="tab" data-tab="logs" class="tab">Log</button>
+  <div id="view-app" class="shell" hidden>
+    <aside class="sidebar">
+      <div class="logo-tile" title="Telkom University"><img src="img/telu-mark.png" alt="Telkom University" width="22" height="32"></div>
+      <nav class="nav" role="tablist" aria-label="Menu utama">
+        <button role="tab" data-tab="docs" class="tab active" title="Ikhtisar dan dokumen" aria-label="Ikhtisar dan dokumen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span class="nav-label">Ikhtisar</span>
+        </button>
+        <button role="tab" data-tab="ask" class="tab" title="Tes Tanya" aria-label="Tes Tanya">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5M12 16.5h.01"/></svg>
+          <span class="nav-label">Tes Tanya</span>
+        </button>
+        <button role="tab" data-tab="logs" class="tab" title="Log" aria-label="Log">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>
+          <span class="nav-label">Log</span>
+        </button>
       </nav>
-      <div class="topbar-right">
-        <span id="whoami" class="muted"></span>
-        <button id="btn-password" class="btn ghost small">Ganti password</button>
-        <button id="btn-logout" class="btn ghost small">Keluar</button>
-      </div>
-    </header>
+      <button id="btn-logout-side" class="nav-out" type="button" title="Keluar" aria-label="Keluar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10"/></svg>
+      </button>
+    </aside>
 
-    <div id="banners"></div>
-
-    <main class="container">
-      <!-- DOKUMEN -->
-      <section id="tab-docs" class="panel">
-        <div id="stats" class="stats"></div>
-        <div class="toolbar">
-          <button class="btn primary" data-add="file">Upload file</button>
-          <button class="btn" data-add="url">Dari URL</button>
-          <button class="btn" data-add="manual">Tulis manual</button>
-          <span class="spacer"></span>
-          <input id="doc-search" type="search" class="search" placeholder="Cari judul, file, kategori..." aria-label="Cari dokumen">
-          <select id="doc-filter" class="filter" aria-label="Filter status">
-            <option value="">Semua status</option>
-            <option value="need">Perlu di-index</option>
-            <option value="indexed">Terindeks</option>
-          </select>
-          <button id="btn-reindex" class="btn" title="Hitung ulang embedding semua dokumen, mis. setelah ganti model">Re-index semua</button>
+    <div class="main">
+      <header class="topbar">
+        <div class="page-head">
+          <h1 id="page-title">Ikhtisar</h1>
+          <p id="page-sub" class="muted">Kelola knowledge yang dipakai bot untuk menjawab.</p>
         </div>
-        <div class="card table-wrap">
-          <table class="stack">
-            <thead>
-              <tr><th>Judul</th><th>Kategori</th><th>Sumber</th><th>Status</th><th class="num">Chunk</th><th>Diperbarui</th><th></th></tr>
-            </thead>
-            <tbody id="docs-body"></tbody>
-          </table>
-          <p id="docs-empty" class="empty" hidden>Belum ada dokumen. Tambahkan lewat Upload file, Dari URL, atau Tulis manual.</p>
+        <div class="user-menu">
+          <button id="user-btn" class="user-chip" type="button" aria-haspopup="menu" aria-expanded="false">
+            <span id="avatar" class="avatar" aria-hidden="true">A</span>
+            <span id="whoami"></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div id="user-pop" class="user-pop" role="menu" hidden>
+            <button id="btn-password" type="button" role="menuitem">Ganti password</button>
+            <button id="btn-logout" type="button" role="menuitem" class="danger-text">Keluar</button>
+          </div>
         </div>
-      </section>
+      </header>
 
-      <!-- TES TANYA -->
-      <section id="tab-ask" class="panel" hidden>
-        <form id="ask-form" class="card ask-form">
-          <label>Pertanyaan
-            <textarea name="question" rows="3" maxlength="500" placeholder="mis. Bagaimana cara mengajukan cuti akademik?" required></textarea>
-          </label>
-          <div class="row">
-            <label class="grow">Filter kategori
-              <select name="category"><option value="">Semua kategori</option></select>
+      <div id="banners"></div>
+
+      <main class="content">
+        <!-- DOKUMEN -->
+        <section id="tab-docs" class="panel">
+          <div class="overview">
+            <div class="ov-block">
+              <div class="sec-head"><h2>Ringkasan</h2><span class="muted small-text">7 hari terakhir</span></div>
+              <div id="summary" class="summary-card"></div>
+            </div>
+            <div class="ov-block">
+              <div class="sec-head">
+                <h2>Knowledge</h2>
+                <button id="btn-reindex" class="btn ghost small" title="Hitung ulang embedding semua dokumen, mis. setelah ganti model">Re-index semua</button>
+              </div>
+              <div id="stats" class="asset-cards"></div>
+            </div>
+          </div>
+
+          <div class="lower">
+            <div class="docs-area">
+              <div class="sec-head wrap">
+                <h2>Dokumen <span id="docs-count" class="count"></span></h2>
+                <div class="toolbar">
+                  <input id="doc-search" type="search" class="search" placeholder="Cari judul, file, kategori..." aria-label="Cari dokumen">
+                  <select id="doc-filter" class="filter" aria-label="Filter status">
+                    <option value="">Semua status</option>
+                    <option value="need">Perlu di-index</option>
+                    <option value="indexed">Terindeks</option>
+                  </select>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table class="stack">
+                  <thead>
+                    <tr><th>Judul</th><th>Kategori</th><th>Sumber</th><th>Status</th><th class="num">Chunk</th><th>Diperbarui</th><th></th></tr>
+                  </thead>
+                  <tbody id="docs-body"></tbody>
+                </table>
+                <p id="docs-empty" class="empty" hidden>Belum ada dokumen. Tambahkan lewat Upload file, Dari URL, atau Tulis manual.</p>
+              </div>
+            </div>
+
+            <aside class="promo">
+              <svg class="promo-art" viewBox="0 0 160 120" aria-hidden="true"><rect x="40" y="14" width="110" height="72" rx="12"/><rect x="24" y="32" width="110" height="72" rx="12"/><rect x="8" y="50" width="110" height="72" rx="12"/></svg>
+              <h3>Tambah <span class="pill-outline">knowledge</span> untuk bot</h3>
+              <p>Upload dokumen resmi kampus, ambil dari halaman web, atau tulis manual. Bot hanya menjawab dari dokumen yang sudah di-index.</p>
+              <div class="promo-actions">
+                <button class="btn light" data-add="file">Upload file</button>
+                <button class="btn outline" data-add="url">Dari URL</button>
+                <button class="btn outline" data-add="manual">Tulis manual</button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- TES TANYA -->
+        <section id="tab-ask" class="panel" hidden>
+          <form id="ask-form" class="card ask-form">
+            <label>Pertanyaan
+              <textarea name="question" rows="3" maxlength="500" placeholder="mis. Bagaimana cara mengajukan cuti akademik?" required></textarea>
             </label>
-            <button class="btn primary" type="submit">Tanya</button>
-          </div>
-        </form>
-        <div id="ask-result"></div>
-      </section>
+            <div class="row">
+              <label class="grow">Filter kategori
+                <select name="category"><option value="">Semua kategori</option></select>
+              </label>
+              <button class="btn primary" type="submit">Tanya</button>
+            </div>
+          </form>
+          <div id="ask-result"></div>
+        </section>
 
-      <!-- LOG -->
-      <section id="tab-logs" class="panel" hidden>
-        <div class="toolbar">
-          <div class="chips" id="log-filter">
-            <button class="chip active" data-status="">Semua</button>
-            <button class="chip" data-status="not_found">Tidak ditemukan</button>
-            <button class="chip" data-status="error">Error</button>
-            <button class="chip" data-status="answered">Terjawab</button>
+        <!-- LOG -->
+        <section id="tab-logs" class="panel" hidden>
+          <div class="toolbar">
+            <div class="chips" id="log-filter">
+              <button class="chip active" data-status="">Semua</button>
+              <button class="chip" data-status="not_found">Tidak ditemukan</button>
+              <button class="chip" data-status="error">Error</button>
+              <button class="chip" data-status="answered">Terjawab</button>
+            </div>
+            <span class="spacer"></span>
+            <span class="muted small-text">Pertanyaan "tidak ditemukan" menunjukkan knowledge yang masih kurang.</span>
           </div>
-          <span class="spacer"></span>
-          <span class="muted small-text">Pertanyaan "tidak ditemukan" menunjukkan knowledge yang masih kurang.</span>
-        </div>
-        <div class="card table-wrap">
-          <table class="stack">
-            <thead><tr><th>Waktu</th><th>Pertanyaan</th><th>Status</th><th class="num">Skor</th><th>Kanal</th><th>Feedback</th></tr></thead>
-            <tbody id="logs-body"></tbody>
-          </table>
-          <p id="logs-empty" class="empty" hidden>Belum ada log.</p>
-        </div>
-      </section>
-    </main>
+          <div class="table-wrap">
+            <table class="stack">
+              <thead><tr><th>Waktu</th><th>Pertanyaan</th><th>Status</th><th class="num">Skor</th><th>Kanal</th><th>Feedback</th></tr></thead>
+              <tbody id="logs-body"></tbody>
+            </table>
+            <p id="logs-empty" class="empty" hidden>Belum ada log.</p>
+          </div>
+        </section>
+      </main>
+    </div>
   </div>
 
   <!-- DIALOG: tambah dokumen -->
