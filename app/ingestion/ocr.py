@@ -168,7 +168,11 @@ def pdf_page_stats(path: Path) -> tuple[int, list[int]] | None:
         for i in range(len(pdf)):
             page = pdf[i]
             try:
-                chars = len(page.get_textpage().get_text_range().strip())
+                textpage = page.get_textpage()
+                try:
+                    chars = len(textpage.get_text_range().strip())
+                finally:
+                    textpage.close()
             finally:
                 page.close()
             if chars < SPARSE_PAGE_CHARS:
@@ -205,7 +209,10 @@ def ocr_pdf(path: Path, settings: Settings, pages: list[int] | None = None) -> O
                 img = page.render(scale=scale).to_pil()
             finally:
                 page.close()
-            text, conf = ocr_image(img, lang)
+            try:  # gambar 200 DPI satu halaman bisa belasan MB: lepas segera, jangan tunggu GC
+                text, conf = ocr_image(img, lang)
+            finally:
+                img.close()
             if text:
                 result.pages[number] = text
             if conf is not None:

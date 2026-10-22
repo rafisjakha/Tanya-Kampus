@@ -129,6 +129,7 @@ def test_ocr_dimatikan(tmp_path, monkeypatch):
         convert_file(p)
 
 
+@needs_tesseract  # tanpa Tesseract, pesannya "program tidak ditemukan", bukan soal bahasa
 def test_bahasa_ocr_tidak_terpasang_dilaporkan(monkeypatch):
     monkeypatch.setenv("OCR_LANGUAGES", "zzz")
     get_settings.cache_clear()

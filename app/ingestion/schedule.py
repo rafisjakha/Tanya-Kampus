@@ -53,7 +53,10 @@ def _blocks(page) -> list[dict]:
 
 
 def _page_grid(page):
-    """Kembalikan (hari, kolom, label_jam, blok) bila halaman ini grid jadwal, selain itu None."""
+    """Kembalikan (hari, kolom, label_jam, blok, kata, top_hari) bila halaman ini grid jadwal, selain itu None.
+
+    Daftar kata ikut dikembalikan supaya extract_words (operasi pdfplumber yang paling berat) cukup sekali per halaman.
+    """
     words = page.extract_words()
     day = next((w for w in words if w["text"] in DAYS and w["x0"] < 100), None)
     if not day:
@@ -80,7 +83,8 @@ def _page_grid(page):
             columns.append((x0, x1, text))
     if len(columns) < 2:
         return None
-    return day["text"].title(), columns, sorted(labels, key=lambda w: w["top"]), _blocks(page)
+    day_top = min(w["top"] for w in words if w["text"] in DAYS and w["x0"] < 100)
+    return day["text"].title(), columns, sorted(labels, key=lambda w: w["top"]), _blocks(page), words, day_top
 
 
 def _parse_cell(words: list[dict]) -> dict:
@@ -99,10 +103,9 @@ def _parse_cell(words: list[dict]) -> dict:
     return {"course": course, "lecturer": lecturer, "class_code": class_code, "practical": practical}
 
 
-def _lecturers(pdf) -> dict[str, str]:
+def _lecturers(texts: list[str]) -> dict[str, str]:
     result = {}
-    for page in pdf.pages:
-        text = page.extract_text() or ""
+    for text in texts:
         if "KODE DOSEN" not in text.upper():
             continue
         for line in text.splitlines():
@@ -136,20 +139,20 @@ def convert_schedule_pdf(path: Path):
         if not grids:
             return None
 
-        lecturers = _lecturers(pdf)
-        title_lines = _title(grids[0][0], min(w["top"] for w in grids[0][0].extract_words() if w["text"] in DAYS and w["x0"] < 100))
+        # teks tiap halaman dibaca sekali, lalu dipakai untuk daftar dosen dan keterangan tambahan
+        texts = [page.extract_text() or "" for page in pdf.pages]
+        lecturers = _lecturers(texts)
+        title_lines = _title(grids[0][0], grids[0][1][5])
         extra = []  # halaman non-grid selain daftar dosen (mis. catatan berlakunya jadwal)
         grid_pages = {id(p) for p, _ in grids}
-        for page in pdf.pages:
-            text = page.extract_text() or ""
+        for page, text in zip(pdf.pages, texts):
             if id(page) in grid_pages or "KODE DOSEN" in text.upper():
                 continue
             extra += [ln.strip() for ln in text.splitlines() if ln.strip() and not FOOTER_RE.match(ln.strip())]
 
         entries = []  # (hari, mulai, selesai, ruang, dict)
         problems = []
-        for page, (day, columns, labels, blocks) in grids:
-            words = page.extract_words()
+        for _page, (day, columns, labels, blocks, words, _top) in grids:
             code_tokens = sum(1 for w in words if CLASS_CODE_RE.match(w["text"]) and any(c.isdigit() for c in w["text"])
                               and w["top"] > labels[0]["top"] - 12)
             found = 0

@@ -185,6 +185,10 @@ Semua lewat `.env` (lihat `.env.example`). Yang paling relevan:
 | `TOP_K`, `SEMANTIC_WEIGHT`, `SCORE_THRESHOLD` | `5`, `0.6`, `0.5` | Parameter retrieval. |
 | `BOT_API_KEY` | | Kunci bersama bot dan API. Bila kosong, `/api/ask` terbuka. |
 | `TELEGRAM_TOKEN`, `ADMIN_TELEGRAM_IDS` | | Untuk bot. |
+| `BOT_COOLDOWN_SECONDS` | `3` | Jeda minimal antarpertanyaan per pengguna. |
+| `SESSION_TIMEOUT_SECONDS` | `60` | Sesi bot berakhir bila pengguna diam sekian detik. `0` = tanpa batas waktu. |
+| `TIMEZONE` | `Asia/Jakarta` | Dipakai untuk "hari ini", "besok", "sekarang" pada pertanyaan jadwal. |
+| `CACHE_TTL_HOURS` | `24` | Lama jawaban yang sama diambil dari cache. `0` = tanpa cache. |
 | `OCR_ENABLED` | `true` | Matikan bila tidak butuh OCR. |
 | `OCR_LANGUAGES` | `ind+eng` | Kode bahasa Tesseract. |
 | `OCR_MAX_PAGES`, `OCR_DPI` | `60`, `200` | Batas halaman per dokumen dan resolusi render. |
@@ -257,7 +261,7 @@ Batasan yang diketahui:
 - OCR tidak sempurna pada scan buram, tabel kompleks, dan tulisan tangan; hasilnya selalu perlu ditinjau admin. Halaman web yang dirender JavaScript belum didukung; salin isinya lewat "Tulis manual".
 - Satu instance saja. SQLite satu penulis dan cache memori per proses tidak cocok untuk beberapa replika.
 - Tautan sumber hanya muncul bila dokumen punya URL sumber. File yang diunggah belum punya tautan publik.
-- Bot menjawab satu giliran tanpa memori percakapan.
+- Memori percakapan bot hanya 3 giliran terakhir, disimpan di memori proses bot, dan hilang saat bot restart atau sesi berakhir.
 
 ## Jalur pengembangan lanjutan
 

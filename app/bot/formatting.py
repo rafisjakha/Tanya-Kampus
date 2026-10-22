@@ -7,8 +7,8 @@ import time
 TELEGRAM_LIMIT = 4096
 
 WELCOME = (
-    "Halo! Saya Tanya Kampus.\n\n"
-    "Saya membantu mencari informasi akademik dan tugas akhir dari dokumen resmi kampus, "
+    "Halo! Aku Tanya Kampus.\n\n"
+    "Aku membantu mencari informasi akademik dan tugas akhir dari dokumen resmi kampus, "
     "lengkap dengan sumbernya.\n\n"
     "Cara pakai: ketik pertanyaanmu langsung di kolom chat, contoh: Bagaimana cara mengajukan cuti akademik?\n\n"
     "Jawaban hanya berdasarkan dokumen yang tersedia. Untuk hal yang menentukan (jadwal, "
@@ -66,7 +66,7 @@ def session_expired_text(timeout: float) -> str:
 
 SESSION_NEEDED = "Sesi belum dimulai atau sudah berakhir. Tekan tombol di bawah atau kirim /start untuk memulai."
 
-TEXT_ONLY = "Saya hanya bisa membaca pesan teks. Ketik pertanyaanmu ya, contoh: Apa syarat sidang tugas akhir?"
+TEXT_ONLY = "Aku hanya bisa membaca pesan teks. Ketik pertanyaanmu ya, contoh: Apa syarat sidang tugas akhir?"
 DOWNLOAD_FAILED = "Maaf, file tidak bisa dikirim saat ini. Silakan ambil dari sumber resmi kampus."
 NO_QUESTION = "Tulis pertanyaannya setelah perintah, contoh:\n/tanya Apa saja syarat sidang tugas akhir?"
 BUSY = "Tunggu sebentar sebelum bertanya lagi."

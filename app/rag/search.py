@@ -116,7 +116,8 @@ class Retriever:
         ).fetchall()
         if rows:
             ids = np.array([r["id"] for r in rows], dtype=np.int64)
-            vectors = np.vstack([blob_to_embedding(r["embedding"]) for r in rows])
+            # satu buffer lalu reshape: tanpa ribuan array kecil sementara seperti np.vstack
+            vectors = blob_to_embedding(b"".join(r["embedding"] for r in rows)).reshape(len(rows), -1)
             categories = np.array([r["category"] for r in rows], dtype=object)
             matrix = _Matrix(version, self.embedder.name, ids, vectors, categories)
         else:
@@ -138,7 +139,10 @@ class Retriever:
         if category:
             mask = m.categories == category
             sims = np.where(mask, sims, -np.inf)
-        order = np.argsort(-sims)[:limit]
+        if limit < len(sims):  # ambil kandidat teratas dalam O(n), bukan mengurutkan semua chunk
+            order = np.argpartition(-sims, limit - 1)[:limit]
+        else:
+            order = np.arange(len(sims))
         return {int(m.ids[i]): float(max(sims[i], 0.0)) for i in order if np.isfinite(sims[i])}
 
     def _bm25(self, conn, terms: list[str], category: str | None, limit: int) -> dict[int, float]:

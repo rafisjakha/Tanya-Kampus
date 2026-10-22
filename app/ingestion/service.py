@@ -138,9 +138,18 @@ def create_manual(*, title: str, markdown: str, category: str,
 
 # --- baca / ubah ----------------------------------------------------------------------------------
 
+# Semua kolom documents kecuali markdown: daftar dokumen tidak perlu memuat isi lengkap ke memori.
+_LIST_COLUMNS = (
+    "id, title, category, source_type, source_name, source_url, original_path, effective_date, status, "
+    "dirty, error, note, downloadable, chunk_count, created_by, created_at, updated_at, indexed_at"
+)
+
+
 def list_documents() -> list[dict]:
     with db() as conn:
-        rows = conn.execute("SELECT * FROM documents ORDER BY updated_at DESC, id DESC").fetchall()
+        rows = conn.execute(
+            f"SELECT {_LIST_COLUMNS} FROM documents ORDER BY updated_at DESC, id DESC"
+        ).fetchall()
     return [_row_to_dict(r) for r in rows]
 
 

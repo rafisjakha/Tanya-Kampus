@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import hmac
 import time
-from collections import defaultdict, deque
+from collections import deque
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -89,21 +89,30 @@ def bot_required(
 # --- pembatas percobaan login (in-memory, cukup untuk satu instance) ------------------------
 
 class LoginLimiter:
+    MAX_KEYS = 10_000  # batas jumlah IP yang dilacak, supaya pemindaian banyak IP tidak menghabiskan memori
+
     def __init__(self, max_attempts: int = 5, window_seconds: int = 60):
         self.max_attempts = max_attempts
         self.window = window_seconds
-        self._hits: dict[str, deque[float]] = defaultdict(deque)
+        self._hits: dict[str, deque[float]] = {}
 
     def check(self, key: str) -> None:
+        q = self._hits.get(key)
+        if not q:
+            return
         now = time.monotonic()
-        q = self._hits[key]
         while q and now - q[0] > self.window:
             q.popleft()
-        if len(q) >= self.max_attempts:
+        if not q:
+            del self._hits[key]
+        elif len(q) >= self.max_attempts:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Terlalu banyak percobaan login. Coba lagi sebentar.")
 
     def record_failure(self, key: str) -> None:
-        self._hits[key].append(time.monotonic())
+        now = time.monotonic()
+        if key not in self._hits and len(self._hits) >= self.MAX_KEYS:
+            self._hits = {k: q for k, q in self._hits.items() if q and now - q[-1] <= self.window}
+        self._hits.setdefault(key, deque(maxlen=self.max_attempts)).append(now)
 
     def reset(self, key: str) -> None:
         self._hits.pop(key, None)

@@ -13,7 +13,6 @@ import json
 import re
 import time
 from dataclasses import dataclass, field
-
 from datetime import datetime
 
 from ..config import Settings
@@ -37,9 +36,8 @@ HISTORY_MAX_TURNS = 3
 HISTORY_MAX_CHARS = 300
 # jawaban yang bergantung pada waktu sekarang tidak boleh dipakai ulang dari cache
 _TIME_SENSITIVE_RE = re.compile(r"\b(selanjutnya|berikutnya|nanti|tanggal|jam\s+berapa|jam\s+\d{2}\.\d{2}|minggu\s+ini|bulan\s+ini)\b", re.I)
-_CITATION_RE = re.compile(r"\[\d+\]")
+_CITATION_RE = re.compile(r"\[(\d+)\]")
 ERROR_MESSAGE = "Maaf, layanan jawaban sedang bermasalah. Coba lagi beberapa saat lagi."
-_CITE_RE = re.compile(r"\[(\d+)\]")
 _NORM_RE = re.compile(r"[^\w\s]", re.UNICODE)
 
 
@@ -88,7 +86,7 @@ def _source_dict(n: int, h: Hit) -> dict:
 
 
 def _cited_sources(answer: str, hits: list[Hit]) -> list[dict]:
-    cited = sorted({int(n) for n in _CITE_RE.findall(answer) if 1 <= int(n) <= len(hits)})
+    cited = sorted({int(n) for n in _CITATION_RE.findall(answer) if 1 <= int(n) <= len(hits)})
     if not cited:  # LLM lupa mencantumkan nomor: tampilkan tiga teratas
         cited = list(range(1, min(3, len(hits)) + 1))
     return [_source_dict(n, hits[n - 1]) for n in cited]
@@ -250,7 +248,7 @@ class Pipeline:
             return finish(status, text, top=top, hits=debug_hits)
 
         sources = _cited_sources(raw, hits)
-        with db() as conn:
-            if not time_sensitive:
+        if not time_sensitive:
+            with db() as conn:
                 self._cache_put(conn, key, raw, sources, top)
         return finish("answered", raw, sources, top, hits=debug_hits)

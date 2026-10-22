@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS query_log (
     error TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_log_status ON query_log(status);
+CREATE INDEX IF NOT EXISTS idx_log_created ON query_log(created_at);
 
 CREATE TABLE IF NOT EXISTS feedback (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,12 +120,12 @@ INSERT OR IGNORE INTO meta(key, value) VALUES ('index_version', '0');
 
 
 def connect() -> sqlite3.Connection:
-    settings = get_settings()
-    settings.data_dir.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(settings.db_path, timeout=30)
+    """Koneksi baru. Folder data dan mode WAL disiapkan sekali di `init_db`, bukan di setiap koneksi."""
+    conn = sqlite3.connect(get_settings().db_path, timeout=30)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
-    conn.execute("PRAGMA journal_mode = WAL")
+    # Dengan WAL, NORMAL tetap aman dari kerusakan file dan jauh lebih sedikit fsync per commit.
+    conn.execute("PRAGMA synchronous = NORMAL")
     return conn
 
 
@@ -160,8 +161,9 @@ def _migrate(conn: sqlite3.Connection) -> None:
 
 def init_db() -> None:
     settings = get_settings()
-    settings.raw_dir.mkdir(parents=True, exist_ok=True)
+    settings.raw_dir.mkdir(parents=True, exist_ok=True)  # sekaligus membuat data_dir
     with db() as conn:
+        conn.execute("PRAGMA journal_mode = WAL")  # tersimpan permanen di file database
         conn.executescript(SCHEMA)
         _migrate(conn)
 

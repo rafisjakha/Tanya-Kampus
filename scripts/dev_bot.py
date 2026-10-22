@@ -10,7 +10,6 @@ pakai `uvicorn app.main:app --reload --port 8001` di terminal lain, yang sudah m
 from __future__ import annotations
 
 import argparse
-import shlex
 import sys
 from pathlib import Path
 
@@ -31,11 +30,19 @@ def on_change(changes: set[tuple[Change, str]]) -> None:
     print(f"[dev_bot] Perubahan terdeteksi ({names}). Memulai ulang bot...", flush=True)
 
 
+def run_bot() -> None:
+    """Target default. Dijalankan sebagai fungsi di proses baru, bukan string perintah: di Windows watchfiles
+    memecah perintah tanpa membuang tanda kutip, sehingga path Python yang mengandung spasi gagal dijalankan."""
+    from app.bot.telegram_bot import main as bot_main
+
+    bot_main()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Jalankan bot dan mulai ulang otomatis saat file berubah.")
     parser.add_argument("--watch", nargs="+", default=["app", ".env"], help="folder atau file yang dipantau")
-    parser.add_argument("--command", default=f"{shlex.quote(sys.executable)} -m app.bot.telegram_bot",
-                        help="perintah yang dijalankan (default: bot Telegram)")
+    parser.add_argument("--command", default=None,
+                        help="perintah lain yang dijalankan (default: bot Telegram dengan Python yang sama)")
     parser.add_argument("--debounce", type=int, default=800, help="jeda ms agar beberapa perubahan sekaligus jadi satu restart")
     args = parser.parse_args(argv)
 
@@ -47,8 +54,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         run_process(
             *paths,
-            target=args.command,
-            target_type="command",
+            target=args.command or run_bot,
+            target_type="command" if args.command else "function",
             callback=on_change,
             watch_filter=should_restart,
             debounce=args.debounce,
