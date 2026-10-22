@@ -1,4 +1,5 @@
 # Web/API
+watchfiles>=0.21  # dipakai scripts/dev_bot.py (juga ikut terpasang lewat uvicorn[standard])
 fastapi>=0.115
 uvicorn[standard]>=0.30
 python-multipart>=0.0.9

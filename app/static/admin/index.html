@@ -4,14 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tanya Kampus Admin</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f766e'/%3E%3Cpath d='M9 12h14M9 17h9' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233a55ea'/%3E%3Cstop offset='1' stop-color='%231d2bab'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='10' fill='url(%23g)'/%3E%3Cpath d='M9 12h14M9 17h9' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preload" href="fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/poppins-800.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
 </head>
 <body>
   <!-- LOGIN -->
   <main id="view-login" class="login" hidden>
     <form id="login-form" class="card login-card" autocomplete="on">
-      <div class="brand brand-lg"><span class="logo" aria-hidden="true"></span> Tanya Kampus</div>
+      <div class="brand brand-lg">Tanya Kampus</div>
       <p class="muted">Masuk untuk mengelola knowledge chatbot.</p>
       <label>Username
         <input name="username" autocomplete="username" required autofocus>
@@ -27,7 +31,7 @@
   <!-- APLIKASI -->
   <div id="view-app" hidden>
     <header class="topbar">
-      <div class="brand"><span class="logo" aria-hidden="true"></span> Tanya Kampus <span class="muted tag">Admin</span></div>
+      <div class="brand">Tanya Kampus <span class="muted tag">Admin</span></div>
       <nav class="tabs" role="tablist">
         <button role="tab" data-tab="docs" class="tab active">Dokumen</button>
         <button role="tab" data-tab="ask" class="tab">Tes Tanya</button>
@@ -60,7 +64,7 @@
           <button id="btn-reindex" class="btn" title="Hitung ulang embedding semua dokumen, mis. setelah ganti model">Re-index semua</button>
         </div>
         <div class="card table-wrap">
-          <table>
+          <table class="stack">
             <thead>
               <tr><th>Judul</th><th>Kategori</th><th>Sumber</th><th>Status</th><th class="num">Chunk</th><th>Diperbarui</th><th></th></tr>
             </thead>
@@ -99,7 +103,7 @@
           <span class="muted small-text">Pertanyaan "tidak ditemukan" menunjukkan knowledge yang masih kurang.</span>
         </div>
         <div class="card table-wrap">
-          <table>
+          <table class="stack">
             <thead><tr><th>Waktu</th><th>Pertanyaan</th><th>Status</th><th class="num">Skor</th><th>Kanal</th><th>Feedback</th></tr></thead>
             <tbody id="logs-body"></tbody>
           </table>

@@ -477,3 +477,23 @@ def test_tombol_mulai_lagi_ditekan_dua_kali():
     second.effective_message.reply_text.assert_not_called()
     second.callback_query.answer.assert_any_call(bot.STARTING)
     first.callback_query.edit_message_reply_markup.assert_called_once_with(reply_markup=None)  # tombol dihapus
+
+
+def test_pesan_yang_diedit_tidak_ditangani():
+    """Mengedit pesan di Telegram menghasilkan update tanpa `message`; dulu membuat on_text error."""
+    from dataclasses import replace
+    from datetime import datetime, timezone
+
+    from telegram import Chat, Message, Update, User
+
+    from app.config import get_settings
+
+    settings = get_settings()
+    app = bot.build_application(replace(settings, telegram_token="123456:ABCdef_fake"))
+    msg = Message(message_id=1, date=datetime.now(timezone.utc), chat=Chat(id=1, type="private"),
+                  from_user=User(id=1, first_name="x", is_bot=False), text="halo")
+    handlers = [h for group in app.handlers.values() for h in group if isinstance(h, bot.MessageHandler)]
+    assert handlers
+    for update in (Update(update_id=1, edited_message=msg),):
+        assert not any(h.check_update(update) for h in handlers)
+    assert any(h.check_update(Update(update_id=2, message=msg)) for h in handlers)  # pesan baru tetap ditangani

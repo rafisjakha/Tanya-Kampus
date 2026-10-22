@@ -209,11 +209,11 @@
             d.note && h('span', { class: 'tag-mini', title: d.note }, /OCR/.test(d.note) ? 'OCR' : 'Cek konversi'),
             d.downloadable && h('span', { class: 'tag-mini info', title: 'Bot boleh mengirim file asli ke mahasiswa' }, 'Unduh')),
           d.effective_date && h('div', { class: 'sub' }, 'Berlaku ' + d.effective_date)),
-        h('td', {}, d.category),
-        h('td', {}, SOURCE_LABEL[d.source_type] || d.source_type, d.source_name && h('div', { class: 'sub' }, d.source_name)),
-        h('td', {}, statusBadge(d)),
-        h('td', { class: 'num' }, d.chunk_count),
-        h('td', {}, fmtDateTime(d.updated_at)),
+        h('td', { 'data-label': 'Kategori' }, d.category),
+        h('td', { 'data-label': 'Sumber' }, SOURCE_LABEL[d.source_type] || d.source_type, d.source_name && h('div', { class: 'sub' }, d.source_name)),
+        h('td', { 'data-label': 'Status' }, statusBadge(d)),
+        h('td', { class: 'num', 'data-label': 'Chunk' }, d.chunk_count),
+        h('td', { 'data-label': 'Diperbarui' }, fmtDateTime(d.updated_at)),
         h('td', { class: 'actions' },
           h('button', { class: 'btn small', onclick: (e) => { e.stopPropagation(); indexFromList(d, e.currentTarget); } },
             d.status === 'indexed' && !d.dirty ? 'Index ulang' : 'Index')),
@@ -553,11 +553,11 @@
             h('div', { class: 'muted small-text' }, `${r.latency_ms ?? '-'} ms${r.cached ? ' · cache' : ''}${r.user_ref ? ' · user ' + r.user_ref : ''}`))));
         const row = h('tr', { class: 'clickable', tabindex: '0' },
           h('td', {}, fmtDateTime(r.created_at)),
-          h('td', {}, r.question),
-          h('td', {}, h('span', { class: 'badge ' + r.status }, STATUS_LABEL[r.status] || r.status)),
-          h('td', { class: 'num' }, r.top_score === null ? '-' : r.top_score.toFixed(3)),
-          h('td', {}, r.channel),
-          h('td', {}, r.feedback === 1 ? 'Membantu' : r.feedback === -1 ? 'Tidak membantu' : '-'));
+          h('td', { 'data-label': 'Pertanyaan' }, r.question),
+          h('td', { 'data-label': 'Status' }, h('span', { class: 'badge ' + r.status }, STATUS_LABEL[r.status] || r.status)),
+          h('td', { class: 'num', 'data-label': 'Skor' }, r.top_score === null ? '-' : r.top_score.toFixed(3)),
+          h('td', { 'data-label': 'Kanal' }, r.channel),
+          h('td', { 'data-label': 'Feedback' }, r.feedback === 1 ? 'Membantu' : r.feedback === -1 ? 'Tidak membantu' : '-'));
         const toggle = () => { detail.hidden = !detail.hidden; };
         row.addEventListener('click', toggle);
         row.addEventListener('keydown', (e) => { if (e.key === 'Enter') toggle(); });

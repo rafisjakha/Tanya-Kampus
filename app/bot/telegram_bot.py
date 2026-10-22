@@ -441,10 +441,12 @@ def build_application(settings: Settings) -> Application:
     app.add_handler(CallbackQueryHandler(on_menu, pattern=r"^menu:[a-z]+$"))
     app.add_handler(CallbackQueryHandler(on_feedback, pattern=r"^fb:\d+:-?1$"))
     app.add_handler(CallbackQueryHandler(on_download, pattern=r"^dl:\d+$"))
-    app.add_handler(MessageHandler(filters.Document.ALL, on_document))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
+    # Hanya pesan baru. Pesan yang diedit (edited_message) tidak punya update.message dan tidak perlu dijawab ulang.
+    new = filters.UpdateType.MESSAGE
+    app.add_handler(MessageHandler(new & filters.Document.ALL, on_document))
+    app.add_handler(MessageHandler(new & filters.TEXT & ~filters.COMMAND, on_text))
     app.add_handler(MessageHandler(
-        filters.ChatType.PRIVATE & (filters.PHOTO | filters.VOICE | filters.AUDIO | filters.VIDEO | filters.Sticker.ALL),
+        new & filters.ChatType.PRIVATE & (filters.PHOTO | filters.VOICE | filters.AUDIO | filters.VIDEO | filters.Sticker.ALL),
         on_non_text,
     ))
     app.add_error_handler(on_error)
