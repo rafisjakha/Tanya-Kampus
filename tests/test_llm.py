@@ -105,6 +105,15 @@ def test_groq_format_permintaan_dan_jawaban(monkeypatch):
     assert body["messages"] == [{"role": "system", "content": "aturan"}, {"role": "user", "content": "pertanyaan"}]
 
 
+def test_groq_gpt_oss_memakai_usaha_berpikir_rendah_model_lain_tidak(monkeypatch):
+    client, seen, _ = groq_with([ok("a"), ok("b")], monkeypatch)
+    client.generate("s", "p")
+    assert "reasoning_effort" not in json.loads(seen[0].content)  # llama menolak parameter ini
+    gpt_oss = GroqClient("k", "openai/gpt-oss-120b", transport=httpx.MockTransport(lambda r: seen.append(r) or ok("c")))
+    gpt_oss.generate("s", "p")
+    assert json.loads(seen[-1].content)["reasoning_effort"] == "low"
+
+
 def test_groq_retry_429_memakai_retry_after(monkeypatch):
     limited = httpx.Response(429, headers={"retry-after": "2"}, json={"error": {"message": "rate limit"}})
     client, seen, sleeps = groq_with([limited, httpx.Response(503, text="sibuk"), ok("Halo")], monkeypatch)
@@ -139,7 +148,7 @@ def test_groq_respons_kosong_adalah_error(monkeypatch):
 
 
 def test_pilih_penyedia_otomatis(monkeypatch):
-    for var in ("LLM_PROVIDER", "GROQ_API_KEY", "GEMINI_API_KEY"):
+    for var in ("LLM_PROVIDER", "GROQ_API_KEY", "GROQ_MODEL", "GEMINI_API_KEY"):  # jangan terpengaruh .env asli
         monkeypatch.delenv(var, raising=False)
     assert Settings.from_env().llm_provider == "gemini"  # .env lama tanpa Groq tetap memakai Gemini
     monkeypatch.setenv("GROQ_API_KEY", "gsk_x")

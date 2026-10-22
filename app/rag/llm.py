@@ -154,6 +154,10 @@ class GroqClient(_RetryingClient):
             "temperature": TEMPERATURE,
             "max_completion_tokens": MAX_OUTPUT_TOKENS,
         }
+        if "gpt-oss" in self.model:
+            # model penalaran: usaha berpikir rendah supaya jawaban cepat, hemat kuota, dan token penalaran
+            # tidak menghabiskan batas keluaran sebelum jawabannya tertulis
+            payload["reasoning_effort"] = "low"
         try:
             r = self._get_http().post("/chat/completions", json=payload)
         except httpx.TransportError as exc:  # timeout, koneksi putus: layak dicoba lagi

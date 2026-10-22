@@ -36,6 +36,8 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setenv("ADMIN_PASSWORD", "password-tes-123")
     monkeypatch.setenv("BOT_API_KEY", "bot-key-tes")
     monkeypatch.setenv("SCORE_THRESHOLD", "0.2")
+    for var in ("LLM_PROVIDER", "GROQ_API_KEY", "GROQ_MODEL", "GEMINI_API_KEY", "GEMINI_MODEL"):
+        monkeypatch.delenv(var, raising=False)  # tes tidak boleh bergantung pada pilihan LLM di .env asli
     get_settings.cache_clear()
     yield get_settings()
     get_settings.cache_clear()
