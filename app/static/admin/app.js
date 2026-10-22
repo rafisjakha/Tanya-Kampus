@@ -252,7 +252,7 @@
         h('div', { class: 'mini-stats' },
           h('span', {}, h('b', {}, `${rate}%`), ' terjawab'),
           h('span', {}, h('b', {}, fmtNum(s.not_found)), ' tidak ditemukan'),
-          h('span', {}, h('b', {}, `${fmtNum(s.feedback_up)} / ${fmtNum(s.feedback_down)}`), ' 👍 / 👎'))),
+          h('span', {}, h('b', {}, fmtNum(s.feedback_up)), ' membantu, ', h('b', {}, fmtNum(s.feedback_down)), ' kurang tepat'))),
       h('div', { class: 'legend' }, h('span', {}, h('i', {}), `${fmtNum(week)} pertanyaan minggu ini`), h('span', {}, h('i', { class: 'nf' }), 'tidak ditemukan')),
       renderChart(days));
 
