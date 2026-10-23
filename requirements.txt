@@ -20,7 +20,7 @@ numpy<2; sys_platform == "darwin" and platform_machine == "x86_64"
 transformers>=4.41,<4.50; sys_platform == "darwin" and platform_machine == "x86_64"
 sentence-transformers<4; sys_platform == "darwin" and platform_machine == "x86_64"
 tokenizers<0.22; sys_platform == "darwin" and platform_machine == "x86_64"
-google-genai>=1.0
+google-genai>=1.0  # hanya untuk LLM_PROVIDER=gemini; Groq dipanggil lewat httpx
 
 # Ingestion (konversi ke markdown)
 markitdown[pdf,docx,pptx,xlsx]>=0.1.0

@@ -1,6 +1,6 @@
 # Tanya Kampus
 
-Chatbot Telegram berbasis RAG + LLM untuk informasi akademik dan tugas akhir. Mahasiswa bertanya, sistem mencari bagian dokumen resmi yang relevan, Gemini menyusun jawaban dari bagian itu, dan jawaban selalu disertai sumbernya. Admin mengelola knowledge lewat panel web.
+Chatbot Telegram berbasis RAG + LLM untuk informasi akademik dan tugas akhir. Mahasiswa bertanya, sistem mencari bagian dokumen resmi yang relevan, LLM (Groq atau Gemini) menyusun jawaban dari bagian itu, dan jawaban selalu disertai sumbernya. Admin mengelola knowledge lewat panel web.
 
 Proyek Teknologi Informasi 23-003. Versi ini (V1) berfokus pada sistem inti yang bisa didemokan. Deployment sengaja ditunda.
 
@@ -14,7 +14,7 @@ Proyek Teknologi Informasi 23-003. Versi ini (V1) berfokus pada sistem inti yang
 - **Admin lewat Telegram** (opsional): admin yang terdaftar mengirim file ke bot, hasilnya menjadi draft untuk ditinjau di panel.
 - **Guardrail**: ambang skor retrieval, instruksi "hanya dari konteks" ke LLM, dan jawaban "tidak ditemukan" yang jelas. Pertanyaan yang tidak terjawab tercatat di log, jadi admin tahu knowledge apa yang kurang.
 - **Hybrid search**: embedding semantik + keyword (SQLite FTS5) + cakupan kata, dengan filter kategori.
-- **Gratis dan open source** kecuali panggilan Gemini (free tier).
+- **Gratis dan open source** kecuali panggilan LLM (free tier Groq atau Gemini).
 
 ## Arsitektur
 
@@ -31,7 +31,7 @@ flowchart LR
       E --> DB[(SQLite satu file<br/>dokumen, chunk, vektor, FTS5, log)]
       Q[/api/ask/] --> S[Hybrid search + ambang skor]
       DB --> S
-      S --> G[Gemini API]
+      S --> G[LLM API<br/>Groq / Gemini]
       G --> Q
     end
     U[Mahasiswa di Telegram] -->|pertanyaan| B[Bot polling]
@@ -39,7 +39,7 @@ flowchart LR
     Q -->|jawaban + sumber| B --> U
 ```
 
-Alur tanya: pertanyaan → embed → hybrid search (top 5) → cek ambang skor → prompt ke Gemini dengan konteks → jawaban + sumber → log.
+Alur tanya: pertanyaan → embed → hybrid search (top 5) → cek ambang skor → prompt ke LLM dengan konteks → jawaban + sumber → log.
 
 Keputusan desain yang perlu diketahui:
 
@@ -96,7 +96,8 @@ pip install -r requirements.txt
 # 2. Konfigurasi
 cp .env.example .env
 python -c "import secrets; print(secrets.token_hex(32))"   # tempel hasilnya ke SECRET_KEY
-# Isi juga: ADMIN_PASSWORD, GEMINI_API_KEY (https://aistudio.google.com/apikey), BOT_API_KEY
+# Isi juga: ADMIN_PASSWORD, BOT_API_KEY, dan salah satu kunci LLM:
+#   GROQ_API_KEY (https://console.groq.com/keys) atau GEMINI_API_KEY (https://aistudio.google.com/apikey)
 
 # 3. Cek kesiapan (menunjukkan persis apa yang masih kurang)
 python -m scripts.doctor
@@ -110,7 +111,7 @@ uvicorn app.main:app --reload --port 8001
 # Docs API:     http://127.0.0.1:8001/docs
 ```
 
-`python -m scripts.doctor --live` sekaligus menguji model embedding, satu panggilan Gemini, token Telegram, dan API yang sedang jalan. Jalankan setelah `.env` terisi.
+`python -m scripts.doctor --live` sekaligus menguji model embedding, satu panggilan LLM, token Telegram, dan API yang sedang jalan. Jalankan setelah `.env` terisi.
 
 Login dengan `ADMIN_USERNAME` dan `ADMIN_PASSWORD` dari `.env`. Admin dibuat otomatis saat API pertama kali jalan. Untuk admin tambahan atau reset password: `python -m scripts.create_admin`.
 
@@ -121,7 +122,7 @@ Login dengan `ADMIN_USERNAME` dan `ADMIN_PASSWORD` dari `.env`. Admin dibuat oto
 3. Di terminal lain: `python -m app.bot.telegram_bot`. Saat mengembangkan, pakai `python -m scripts.dev_bot` supaya bot otomatis dimulai ulang tiap file `.py` di `app/` atau `.env` berubah (Ctrl+C untuk berhenti).
 4. Buka bot di Telegram, kirim `/start`. Akan muncul tombol menu (Tanya, Bantuan, Tentang Kami; di tampilan Bantuan tombolnya berganti jadi perintah), atau langsung ketik pertanyaanmu. Menu juga bisa dipanggil lewat `/menu`, dan info tim lewat `/about`.
 
-Sesi percakapan berakhir otomatis bila pengguna diam 1 menit (`SESSION_TIMEOUT_SECONDS`, 0 = nonaktif); bot memberi tahu dan pengguna menekan **Mulai lagi** atau `/start`. Pesan lanjutan seperti "kalo hari kamis?" dilengkapi dari riwayat chat (di sesi yang sama) lewat satu panggilan Gemini tambahan. Sapaan dan obrolan ringan dijawab Gemini (tanpa sumber), bot menolak pesan non-teks dengan ramah, dan membatasi frekuensi tanya per pengguna (`BOT_COOLDOWN_SECONDS`).
+Sesi percakapan berakhir otomatis bila pengguna diam 1 menit (`SESSION_TIMEOUT_SECONDS`, 0 = nonaktif); bot memberi tahu dan pengguna menekan **Mulai lagi** atau `/start`. Pesan lanjutan seperti "kalo hari kamis?" dilengkapi dari riwayat chat (di sesi yang sama) lewat satu panggilan LLM tambahan. Sapaan dan obrolan ringan dijawab LLM (tanpa sumber), bot menolak pesan non-teks dengan ramah, dan membatasi frekuensi tanya per pengguna (`BOT_COOLDOWN_SECONDS`).
 
 Untuk fitur kirim file sebagai admin: kirim `/id` ke bot, masukkan angkanya ke `ADMIN_TELEGRAM_IDS`, restart bot. File yang dikirim menjadi **draft**; tinjau dan klik Index di panel admin. Judul diambil dari caption file.
 
@@ -135,7 +136,7 @@ Untuk mencoba alur lengkap secara offline (kualitas rendah, hanya untuk uji alur
 EMBEDDING_BACKEND=hashing LLM_PROVIDER=extractive uvicorn app.main:app --reload
 ```
 
-`hashing` mengganti model embedding dengan hash kata. `extractive` menjawab dengan mengutip potongan dokumen tanpa LLM (bisa juga dipakai sebagai cadangan bila kuota Gemini habis).
+`hashing` mengganti model embedding dengan hash kata. `extractive` menjawab dengan mengutip potongan dokumen tanpa LLM (bisa juga dipakai sebagai cadangan bila kuota LLM habis).
 
 ## Cara kerja
 
@@ -177,9 +178,11 @@ Semua lewat `.env` (lihat `.env.example`). Yang paling relevan:
 |---|---|---|
 | `SECRET_KEY` | (wajib) | Penanda token login. 32 karakter acak atau lebih. |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | | Admin pertama, dibuat otomatis bila belum ada admin. |
+| `LLM_PROVIDER` | otomatis | `groq`, `gemini`, atau `extractive`. Bila kosong: `groq` saat `GROQ_API_KEY` terisi, selain itu `gemini`. |
+| `GROQ_API_KEY` | | Dari [console.groq.com/keys](https://console.groq.com/keys). |
+| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Alternatif: `llama-3.1-8b-instant` (lebih cepat, kuota lebih longgar), `openai/gpt-oss-120b`. Daftar: [console.groq.com/docs/models](https://console.groq.com/docs/models). |
 | `GEMINI_API_KEY` | | Dari Google AI Studio. |
 | `GEMINI_MODEL` | `gemini-3.6-flash` | Cek nama model terbaru di AI Studio bila muncul error model tidak ditemukan. |
-| `LLM_PROVIDER` | `gemini` | `gemini` atau `extractive`. |
 | `EMBEDDING_MODEL` | `intfloat/multilingual-e5-small` | Alternatif lebih akurat tapi berat: `BAAI/bge-m3`. Setelah ganti, klik **Re-index semua**. |
 | `EMBEDDING_BACKEND` | `sentence-transformers` | `hashing` hanya untuk tes. |
 | `TOP_K`, `SEMANTIC_WEIGHT`, `SCORE_THRESHOLD` | `5`, `0.6`, `0.5` | Parameter retrieval. |
@@ -225,7 +228,7 @@ Tes memakai embedding hashing dan LLM tiruan, jadi tidak butuh internet atau API
 ## Operasional
 
 ```bash
-python -m scripts.doctor              # cek kesiapan; --live untuk uji nyata Gemini/Telegram/model
+python -m scripts.doctor              # cek kesiapan; --live untuk uji nyata LLM/Telegram/model
 python -m scripts.backup              # zip database + file asli ke ./backups (aman saat server hidup)
 python -m scripts.backup --restore backups/FILE.zip   # pulihkan (hentikan server dulu; --force untuk menimpa)
 ```
@@ -241,7 +244,7 @@ Backup rutin cukup dijadwalkan lewat cron atau Task Scheduler. Embedding ikut te
 - Panel admin merender data lewat DOM, bukan `innerHTML`.
 - Belum ada pembatas laju untuk `/api/ask` selain cooldown di bot. Pasang reverse proxy dengan rate limit sebelum membuka API ke internet.
 - Privasi: pertanyaan dicatat bersama ID Telegram pengguna (bot memberi tahu ini di `/start`). Log dihapus otomatis setelah `LOG_RETENTION_DAYS`.
-- Free tier Gemini: periksa ketentuan penggunaan data Google sebelum memasukkan dokumen yang tidak boleh dipublikasikan. Dokumen resmi kampus yang bersifat publik umumnya aman, dokumen internal perlu dipertimbangkan.
+- Free tier LLM: periksa ketentuan penggunaan data penyedia (Groq atau Google) sebelum memasukkan dokumen yang tidak boleh dipublikasikan. Dokumen resmi kampus yang bersifat publik umumnya aman, dokumen internal perlu dipertimbangkan.
 
 ## Status pengujian dan batasan V1
 
@@ -250,7 +253,7 @@ Sudah diuji otomatis dan manual (di lingkungan pengembangan tanpa akses internet
 **Belum diuji dengan sistem asli**, jadi cek pertama kali Anda menjalankannya:
 
 - Model embedding asli (`multilingual-e5-small`): kualitas retrieval dan nilai ambang skor belum dikalibrasi. Jalankan `python -m eval.run_eval`.
-- Panggilan Gemini sungguhan, termasuk nama model dan perilaku retry saat kena limit.
+- Panggilan LLM sungguhan (Groq dan Gemini), termasuk nama model dan perilaku retry saat kena limit. Klien Groq diuji dengan respons HTTP tiruan.
 - Koneksi ke server Telegram sungguhan (hanya logika handler yang diuji).
 - Konversi dari URL sungguhan dengan `trafilatura`.
 - Paket bahasa Tesseract `ind` (di lingkungan pengembangan hanya sempat diuji dengan data bahasa Indonesia yang diunduh manual). Kualitas OCR dokumen kampus asli bergantung pada kualitas scan.
@@ -280,8 +283,9 @@ Catatan deployment saat tiba waktunya: RAM adalah kendala utama (model embedding
 
 | Gejala | Penyebab dan solusi |
 |---|---|
-| `503 GEMINI_API_KEY belum diset` saat tanya | Isi `GEMINI_API_KEY` di `.env`, restart API. Atau `LLM_PROVIDER=extractive` untuk tes. |
-| Error model Gemini tidak ditemukan | Ganti `GEMINI_MODEL` sesuai daftar di Google AI Studio. |
+| `503 GROQ_API_KEY belum diset` / `503 GEMINI_API_KEY belum diset` saat tanya | Isi kunci penyedia yang dipakai di `.env`, restart API. Atau `LLM_PROVIDER=extractive` untuk tes. |
+| Error model tidak ditemukan | Ganti `GROQ_MODEL` (lihat console.groq.com/docs/models) atau `GEMINI_MODEL` (lihat Google AI Studio). |
+| Jawaban sering "layanan sedang bermasalah" di Groq | Kena batas kuota per menit/hari. Pakai `GROQ_MODEL=llama-3.1-8b-instant` yang kuotanya lebih longgar, atau naikkan `BOT_COOLDOWN_SECONDS`. |
 | Semua pertanyaan dijawab "tidak ditemukan" | Dokumen belum di-index (status Draft), atau `SCORE_THRESHOLD` terlalu tinggi. Lihat skor di tab Tes Tanya, lalu kalibrasi. |
 | Pertanyaan di luar topik tetap dijawab | `SCORE_THRESHOLD` terlalu rendah. Kalibrasi dengan `eval.run_eval`. |
 | Setelah ganti `EMBEDDING_MODEL`, hasil kosong | Chunk lama memakai model berbeda. Klik **Re-index semua**. |

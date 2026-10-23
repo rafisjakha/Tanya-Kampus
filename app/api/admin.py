@@ -21,7 +21,7 @@ def meta(settings: Settings = Depends(get_settings)):
     return {
         "categories": sorted(set(DEFAULT_CATEGORIES) | set(used)),
         "embedding": f"{settings.embedding_backend}:{settings.embedding_model}",
-        "llm": {"gemini": settings.gemini_model, "groq": settings.groq_model}.get(settings.llm_provider, settings.llm_provider),
+        "llm": settings.llm_model,
         "score_threshold": settings.score_threshold,
         "top_k": settings.top_k,
         "telegram_upload_enabled": bool(settings.bot_api_key),

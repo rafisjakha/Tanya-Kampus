@@ -1,7 +1,7 @@
 """Pemeriksaan kesiapan sebelum dipakai. Menunjukkan persis apa yang masih kurang.
 
     python -m scripts.doctor            # cek konfigurasi, paket, OCR, database (tanpa jaringan)
-    python -m scripts.doctor --live     # sekaligus uji nyata: model embedding, Gemini (1 permintaan),
+    python -m scripts.doctor --live     # sekaligus uji nyata: model embedding, LLM (1 permintaan),
                                         # Telegram getMe, dan API yang sedang berjalan
 
 Keluar dengan kode 1 bila ada item GAGAL.
@@ -58,6 +58,13 @@ def check_packages(settings: Settings) -> list[Check]:
     return out
 
 
+# penyedia LLM -> (variabel .env, atribut Settings, tempat mengambil kunci)
+LLM_KEYS = {
+    "groq": ("GROQ_API_KEY", "groq_api_key", "https://console.groq.com/keys"),
+    "gemini": ("GEMINI_API_KEY", "gemini_api_key", "https://aistudio.google.com/apikey"),
+}
+
+
 def check_config(settings: Settings) -> list[Check]:
     out = []
     env = BASE_DIR / ".env"
@@ -68,14 +75,13 @@ def check_config(settings: Settings) -> list[Check]:
         out.append(Check(WARN, "SECRET_KEY", "kurang dari 32 karakter"))
     else:
         out.append(Check(OK, "SECRET_KEY", "terisi"))
-    if settings.llm_provider == "groq":
-        out.append(Check(OK if settings.groq_api_key else FAIL, "GROQ_API_KEY",
-                         "terisi" if settings.groq_api_key else "belum diisi (https://console.groq.com/keys)"))
-    elif settings.llm_provider == "gemini":
-        out.append(Check(OK if settings.gemini_api_key else FAIL, "GEMINI_API_KEY",
-                         "terisi" if settings.gemini_api_key else "belum diisi (https://aistudio.google.com/apikey)"))
+    key_check = LLM_KEYS.get(settings.llm_provider)
+    if key_check:
+        var, attr, url = key_check
+        filled = bool(getattr(settings, attr))
+        out.append(Check(OK if filled else FAIL, var, f"terisi (model {settings.llm_model})" if filled else f"belum diisi ({url})"))
     else:
-        out.append(Check(WARN, "LLM_PROVIDER", f"'{settings.llm_provider}': bukan Gemini, kualitas jawaban terbatas"))
+        out.append(Check(WARN, "LLM_PROVIDER", f"'{settings.llm_provider}': tanpa LLM, kualitas jawaban terbatas"))
     if settings.embedding_backend == "hashing":
         out.append(Check(WARN, "EMBEDDING_BACKEND", "hashing hanya untuk tes, kualitas retrieval rendah"))
     token = settings.telegram_token
@@ -154,35 +160,25 @@ def live_embedding(settings: Settings) -> Check:
         return Check(FAIL, "Model embedding", f"{type(exc).__name__}: {exc}")
 
 
-def live_gemini(settings: Settings) -> Check:
-    if settings.llm_provider != "gemini" or not settings.gemini_api_key:
-        return Check(SKIP, "Gemini", "tidak dikonfigurasi")
-    from app.rag.llm import GeminiClient, LLMError
+def live_llm(settings: Settings) -> Check:
+    if settings.llm_provider not in LLM_KEYS:
+        return Check(SKIP, "LLM", f"LLM_PROVIDER={settings.llm_provider}: tidak ada panggilan LLM")
+    from app.rag.llm import LLMError, build_llm
 
+    label = settings.llm_provider.capitalize()
+    try:
+        client = build_llm(settings)
+    except RuntimeError as exc:
+        return Check(SKIP, label, str(exc))
+    client.max_attempts = 1
     try:
         t = time.perf_counter()
-        reply = GeminiClient(settings.gemini_api_key, settings.gemini_model, max_attempts=1).generate(
-            "Jawab sangat singkat.", "Balas hanya dengan kata: OK"
-        )
-        return Check(OK, "Gemini", f"model {settings.gemini_model} merespons ({reply[:20]!r}, {time.perf_counter() - t:.1f} detik)")
+        reply = client.generate("Jawab sangat singkat.", "Balas hanya dengan kata: OK")
+        return Check(OK, label, f"model {settings.llm_model} merespons ({reply[:20]!r}, {time.perf_counter() - t:.1f} detik)")
     except LLMError as exc:
-        hint = " Cek nama model di Google AI Studio (GEMINI_MODEL) dan API key." if "404" in str(exc) or "not found" in str(exc).lower() else ""
-        return Check(FAIL, "Gemini", f"{exc}{hint}")
-
-
-def live_groq(settings: Settings) -> Check:
-    if settings.llm_provider != "groq" or not settings.groq_api_key:
-        return Check(SKIP, "Groq", "tidak dikonfigurasi")
-    from app.rag.llm import GroqClient, LLMError
-
-    try:
-        t = time.perf_counter()
-        reply = GroqClient(settings.groq_api_key, settings.groq_model, max_attempts=1).generate(
-            "Jawab sangat singkat.", "Balas hanya dengan kata: OK"
-        )
-        return Check(OK, "Groq", f"model {settings.groq_model} merespons ({reply[:20]!r}, {time.perf_counter() - t:.1f} detik)")
-    except LLMError as exc:
-        return Check(FAIL, "Groq", f"{exc} Cek GROQ_MODEL dan API key.")
+        var = f"{settings.llm_provider.upper()}_MODEL"
+        hint = f" Cek nama model ({var}) dan API key." if "404" in str(exc) or "not found" in str(exc).lower() else ""
+        return Check(FAIL, label, f"{exc}{hint}")
 
 
 def live_telegram(settings: Settings) -> Check:
@@ -214,9 +210,9 @@ def run_checks(settings: Settings | None = None, live: bool = False) -> list[Che
     settings = settings or get_settings()
     checks = [check_python(), *check_packages(settings), *check_config(settings), *check_storage(settings), check_ocr(settings)]
     if live:
-        checks += [live_embedding(settings), live_gemini(settings), live_groq(settings), live_telegram(settings), live_api(settings)]
+        checks += [live_embedding(settings), live_llm(settings), live_telegram(settings), live_api(settings)]
     else:
-        checks.append(Check(SKIP, "Uji nyata", "model embedding, Gemini, Telegram: jalankan dengan --live"))
+        checks.append(Check(SKIP, "Uji nyata", "model embedding, LLM, Telegram: jalankan dengan --live"))
     return checks
 
 
