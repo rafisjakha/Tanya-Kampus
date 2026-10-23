@@ -68,7 +68,10 @@ def check_config(settings: Settings) -> list[Check]:
         out.append(Check(WARN, "SECRET_KEY", "kurang dari 32 karakter"))
     else:
         out.append(Check(OK, "SECRET_KEY", "terisi"))
-    if settings.llm_provider == "gemini":
+    if settings.llm_provider == "groq":
+        out.append(Check(OK if settings.groq_api_key else FAIL, "GROQ_API_KEY",
+                         "terisi" if settings.groq_api_key else "belum diisi (https://console.groq.com/keys)"))
+    elif settings.llm_provider == "gemini":
         out.append(Check(OK if settings.gemini_api_key else FAIL, "GEMINI_API_KEY",
                          "terisi" if settings.gemini_api_key else "belum diisi (https://aistudio.google.com/apikey)"))
     else:
@@ -167,6 +170,21 @@ def live_gemini(settings: Settings) -> Check:
         return Check(FAIL, "Gemini", f"{exc}{hint}")
 
 
+def live_groq(settings: Settings) -> Check:
+    if settings.llm_provider != "groq" or not settings.groq_api_key:
+        return Check(SKIP, "Groq", "tidak dikonfigurasi")
+    from app.rag.llm import GroqClient, LLMError
+
+    try:
+        t = time.perf_counter()
+        reply = GroqClient(settings.groq_api_key, settings.groq_model, max_attempts=1).generate(
+            "Jawab sangat singkat.", "Balas hanya dengan kata: OK"
+        )
+        return Check(OK, "Groq", f"model {settings.groq_model} merespons ({reply[:20]!r}, {time.perf_counter() - t:.1f} detik)")
+    except LLMError as exc:
+        return Check(FAIL, "Groq", f"{exc} Cek GROQ_MODEL dan API key.")
+
+
 def live_telegram(settings: Settings) -> Check:
     if not settings.telegram_token:
         return Check(SKIP, "Telegram", "TELEGRAM_TOKEN kosong")
@@ -196,7 +214,7 @@ def run_checks(settings: Settings | None = None, live: bool = False) -> list[Che
     settings = settings or get_settings()
     checks = [check_python(), *check_packages(settings), *check_config(settings), *check_storage(settings), check_ocr(settings)]
     if live:
-        checks += [live_embedding(settings), live_gemini(settings), live_telegram(settings), live_api(settings)]
+        checks += [live_embedding(settings), live_gemini(settings), live_groq(settings), live_telegram(settings), live_api(settings)]
     else:
         checks.append(Check(SKIP, "Uji nyata", "model embedding, Gemini, Telegram: jalankan dengan --live"))
     return checks

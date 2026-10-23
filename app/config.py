@@ -83,6 +83,8 @@ class Settings:
     llm_provider: str
     gemini_api_key: str | None
     gemini_model: str
+    groq_api_key: str | None
+    groq_model: str
     # Retrieval
     top_k: int
     semantic_weight: float
@@ -137,9 +139,11 @@ class Settings:
             embedding_model=model,
             embedding_query_prefix=q_default if q_prefix is None else q_prefix,
             embedding_passage_prefix=p_default if p_prefix is None else p_prefix,
-            llm_provider=(_get("LLM_PROVIDER", "gemini") or "").lower(),
+            llm_provider=(_get("LLM_PROVIDER", "groq") or "").lower(),
             gemini_api_key=_get("GEMINI_API_KEY"),
             gemini_model=_get("GEMINI_MODEL", "gemini-3.6-flash") or "gemini-3.6-flash",
+            groq_api_key=_get("GROQ_API_KEY"),
+            groq_model=_get("GROQ_MODEL", "llama-3.3-70b-versatile") or "llama-3.3-70b-versatile",
             top_k=_get_int("TOP_K", 5),
             semantic_weight=_get_float("SEMANTIC_WEIGHT", 0.6),
             score_threshold=_get_float("SCORE_THRESHOLD", 0.5),
