@@ -89,7 +89,8 @@ CREATE TABLE IF NOT EXISTS query_log (
     sources_json TEXT,
     latency_ms INTEGER,
     cached INTEGER NOT NULL DEFAULT 0,
-    error TEXT
+    error TEXT,
+    llm TEXT                                          -- penyedia:model yang dipakai; kosong bila tanpa LLM (cache dll)
 );
 CREATE INDEX IF NOT EXISTS idx_log_status ON query_log(status);
 CREATE INDEX IF NOT EXISTS idx_log_created ON query_log(created_at);
@@ -151,7 +152,14 @@ _DOCUMENT_COLUMNS = {
 }
 
 
+_QUERY_LOG_COLUMNS = {"llm": "TEXT"}
+
+
 def _migrate(conn: sqlite3.Connection) -> None:
+    logged = {r["name"] for r in conn.execute("PRAGMA table_info(query_log)")}
+    for name, decl in _QUERY_LOG_COLUMNS.items():
+        if name not in logged:
+            conn.execute(f"ALTER TABLE query_log ADD COLUMN {name} {decl}")
     existing = {r["name"] for r in conn.execute("PRAGMA table_info(documents)")}
     for name, decl in _DOCUMENT_COLUMNS.items():
         if name not in existing:

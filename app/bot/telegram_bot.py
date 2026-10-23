@@ -11,7 +11,14 @@ import io
 import logging
 
 import httpx
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
+    Update,
+)
 from telegram.constants import ChatAction, ChatType
 from telegram.error import BadRequest
 from telegram.ext import (
@@ -39,9 +46,11 @@ from .formatting import (
     WELCOME,
     ChatHistory,
     SESSION_NEEDED,
+    START_LABEL,
     STARTING,
     Cooldown,
     format_answer,
+    is_start_text,
     session_expired_text,
     split_message,
 )
@@ -106,8 +115,29 @@ def _sessions(context: ContextTypes.DEFAULT_TYPE) -> Sessions:
     return context.application.bot_data["sessions"]
 
 
-def start_button() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([[InlineKeyboardButton("▶️ Mulai lagi", callback_data="session:start")]])
+def start_keyboard() -> ReplyKeyboardMarkup:
+    """Tombol "Mulai" di bawah kolom ketik. Menekannya sama dengan /start; keyboard menyembunyikan diri setelah dipakai."""
+    return ReplyKeyboardMarkup(
+        [[KeyboardButton(START_LABEL)]], resize_keyboard=True, one_time_keyboard=True,
+        input_field_placeholder="Tekan Mulai untuk memulai",
+    )
+
+
+def _shown(context: ContextTypes.DEFAULT_TYPE) -> set[int]:
+    return context.application.bot_data["start_kb_shown"]  # pengguna yang sedang diberi keyboard "Mulai"
+
+
+async def _remove_start_keyboard(context: ContextTypes.DEFAULT_TYPE, user_id: int, chat_id: int) -> None:
+    """Hapus keyboard "Mulai" bila pernah ditampilkan (mis. pengguna mengetik /start alih-alih menekan tombolnya).
+    Telegram hanya mengizinkan satu reply_markup per pesan, jadi dikirim pesan sekejap lalu dihapus."""
+    if user_id not in _shown(context):
+        return
+    _shown(context).discard(user_id)
+    try:
+        note = await context.bot.send_message(chat_id, "✅", reply_markup=ReplyKeyboardRemove())
+        await note.delete()
+    except Exception:  # noqa: BLE001 - keyboard yang tertinggal tidak berbahaya
+        log.debug("Gagal menghapus keyboard Mulai", exc_info=True)
 
 
 START_GUARD_SECONDS = 3  # /start atau "Mulai lagi" yang ditekan berulang dalam waktu sependek ini diabaikan
@@ -126,6 +156,7 @@ async def _begin_session(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return
     _history(context).clear(user.id)
     _sessions(context).touch(user.id, chat.id)
+    await _remove_start_keyboard(context, user.id, chat.id)
     await update.effective_message.reply_text(WELCOME, reply_markup=main_menu())
 
 
@@ -141,7 +172,8 @@ async def _session_ok(update: Update, context: ContextTypes.DEFAULT_TYPE) -> boo
     query = getattr(update, "callback_query", None)
     if query is not None:
         await query.answer("Sesi berakhir. Kirim /start untuk memulai lagi.", show_alert=True)
-    await update.effective_message.reply_text(SESSION_NEEDED, reply_markup=start_button())
+    _shown(context).add(user.id)
+    await update.effective_message.reply_text(SESSION_NEEDED, reply_markup=start_keyboard())
     return False
 
 
@@ -307,6 +339,9 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (update.message.text or "").strip()
     if not text:
         return
+    if is_start_text(text):  # tombol "Mulai" di bawah kolom ketik
+        await _begin_session(update, context)
+        return
     if not await _session_ok(update, context):
         return
     await answer_question(update, context, text)
@@ -399,10 +434,12 @@ async def _post_init(app: Application):
     app.bot_data["cooldown"] = Cooldown(settings.bot_cooldown_seconds)
     app.bot_data["history"] = ChatHistory()
     app.bot_data["start_guard"] = Cooldown(START_GUARD_SECONDS)
+    app.bot_data["start_kb_shown"] = set()
 
     async def on_expire(user_id: int, chat_id: int) -> None:
         app.bot_data["history"].clear(user_id)
-        await app.bot.send_message(chat_id, session_expired_text(settings.session_timeout_seconds), reply_markup=start_button())
+        app.bot_data["start_kb_shown"].add(user_id)
+        await app.bot.send_message(chat_id, session_expired_text(settings.session_timeout_seconds), reply_markup=start_keyboard())
 
     app.bot_data["sessions"] = Sessions(settings.session_timeout_seconds, on_expire)
     await app.bot.set_my_commands([

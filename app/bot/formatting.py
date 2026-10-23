@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 import time
 
+from ..rag.textclean import clean_answer
+
 TELEGRAM_LIMIT = 4096
 
 WELCOME = (
@@ -60,17 +62,23 @@ def _duration(seconds: float) -> str:
 def session_expired_text(timeout: float) -> str:
     return (
         f"Sesi percakapan berakhir karena tidak ada aktivitas selama {_duration(timeout)}. "
-        "Tekan tombol di bawah atau kirim /start untuk memulai lagi."
+        "Tekan Mulai di bawah atau kirim /start untuk memulai lagi."
     )
 
 
-SESSION_NEEDED = "Sesi belum dimulai atau sudah berakhir. Tekan tombol di bawah atau kirim /start untuk memulai."
+SESSION_NEEDED = "Sesi belum dimulai atau sudah berakhir. Tekan Mulai di bawah atau kirim /start untuk memulai."
 
 TEXT_ONLY = "Aku hanya bisa membaca pesan teks. Ketik pertanyaanmu ya, contoh: Apa syarat sidang tugas akhir?"
 DOWNLOAD_FAILED = "Maaf, file tidak bisa dikirim saat ini. Silakan ambil dari sumber resmi kampus."
 NO_QUESTION = "Tulis pertanyaannya setelah perintah, contoh:\n/tanya Apa saja syarat sidang tugas akhir?"
 BUSY = "Tunggu sebentar sebelum bertanya lagi."
 STARTING = "Sedang diproses, tunggu sebentar ya."
+START_LABEL = "Mulai"
+
+
+def is_start_text(text: str) -> bool:
+    """Pesan yang dikirim saat tombol "Mulai" (keyboard balasan) ditekan."""
+    return text.strip().casefold() in {"mulai", "▶️ mulai", "▶ mulai"}
 API_DOWN = "Maaf, layanan sedang tidak bisa dihubungi. Coba lagi beberapa saat lagi."
 
 
@@ -79,7 +87,7 @@ _CITATION_RE = re.compile(r"[ \t]*(?:\[\d+\])+")
 
 def format_answer(result: dict) -> str:
     """Teks jawaban untuk Telegram. Penanda sumber [1] dibuang karena daftar sumber tidak ditampilkan."""
-    text = _CITATION_RE.sub("", result["answer"])
+    text = clean_answer(_CITATION_RE.sub("", result["answer"]))
     return re.sub(r"[ \t]+([.,;:!?])", r"\1", text).strip()
 
 

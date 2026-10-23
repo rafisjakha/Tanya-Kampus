@@ -98,6 +98,43 @@
     finally { btn.disabled = false; btn.textContent = label; }
   }
 
+  // ---------- pembaruan langsung ----------
+  // Tiap beberapa detik panel menanyakan penanda perubahan (/pulse) dan hanya memuat ulang bagian yang berubah.
+  const PULSE_MS = 3000;
+  let pulseTimer = null;
+  let lastPulse = null;
+  const currentTab = () => ($('.tab.active') || {}).dataset?.tab;
+
+  function setLive(state) {
+    const el = $('#live');
+    el.dataset.state = state;
+    el.title = state === 'on' ? 'Terhubung: data diperbarui otomatis' : state === 'off' ? 'Terputus: mencoba lagi...' : 'Dijeda saat tab tidak aktif';
+  }
+
+  async function pulseTick() {
+    if (document.hidden || $('#view-app').hidden) { setLive('paused'); return; }
+    let now;
+    try { now = await api('/pulse'); } catch { setLive('off'); return; }
+    setLive('on');
+    const prev = lastPulse;
+    lastPulse = now;
+    if (!prev) return;
+    const changed = (k) => JSON.stringify(prev[k]) !== JSON.stringify(now[k]);
+    const tab = currentTab();
+    if (changed('llm')) loadLlm();
+    if (changed('logs') && tab === 'logs') refreshLogs();
+    if ((changed('docs') || changed('logs')) && tab === 'docs') refreshDocs(); // ringkasan di Ikhtisar ikut bergerak
+  }
+
+  function startPulse() {
+    stopPulse();
+    lastPulse = null;
+    pulseTimer = setInterval(pulseTick, PULSE_MS);
+    pulseTick();
+  }
+  function stopPulse() { if (pulseTimer) clearInterval(pulseTimer); pulseTimer = null; lastPulse = null; setLive('paused'); }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && pulseTimer) pulseTick(); });
+
   // ---------- login / sesi ----------
   function showLogin() {
     $('#view-app').hidden = true;
@@ -106,6 +143,7 @@
   }
 
   function logout() {
+    stopPulse();
     token = null;
     store.del('tk_token');
     showLogin();
@@ -149,7 +187,36 @@
     $('#avatar').textContent = (username || 'A').trim().charAt(0) || 'A';
     meta = await api('/meta');
     renderMeta();
-    await refreshDocs();
+    loadLlm();
+    selectTab(tabFromHash()); // kembali ke halaman yang terakhir dibuka (tab ada di URL)
+    startPulse();
+  }
+
+  // ---------- pilihan model LLM (Groq / Gemini) ----------
+  function renderLlm(state) {
+    const wrap = $('#llm-switch');
+    const box = $('#llm-options');
+    wrap.hidden = false;
+    box.replaceChildren(...state.providers.map((p) => h('button', {
+      type: 'button', role: 'radio', 'aria-checked': String(p.id === state.active), disabled: !p.available,
+      title: p.available ? `${p.label}: ${p.model}` : `${p.label}: ${p.hint}`,
+      onclick: () => chooseLlm(p),
+    }, p.label)));
+  }
+
+  async function loadLlm() {
+    try { renderLlm(await api('/llm')); } catch { $('#llm-switch').hidden = true; /* mode tes atau kunci belum diisi */ }
+  }
+
+  async function chooseLlm(p) {
+    const box = $('#llm-options');
+    if ($('[aria-checked=true]', box)?.textContent === p.label) return;
+    box.classList.add('busy');
+    try {
+      renderLlm(await api('/llm', { method: 'PUT', json: { provider: p.id } }));
+      toast(`Model diganti ke ${p.label} (${p.model}).`);
+    } catch (ex) { toast(ex.message, true); }
+    finally { box.classList.remove('busy'); }
   }
 
   function renderMeta() {
@@ -170,7 +237,16 @@
     logs: ['Log', 'Pertanyaan yang masuk dari mahasiswa beserta hasilnya.'],
   };
 
+  const tabFromHash = () => {
+    const name = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
+    return PAGES[name] ? name : 'docs';
+  };
+
   function selectTab(name) {
+    if (!PAGES[name]) name = 'docs';
+    // tab tersimpan di URL supaya reload tetap di halaman ini; tombol back/forward berpindah antar tab
+    if (!location.hash) history.replaceState(null, '', '#' + name);
+    else if (tabFromHash() !== name) history.pushState(null, '', '#' + name);
     $$('.tab').forEach((t) => {
       t.classList.toggle('active', t.dataset.tab === name);
       t.setAttribute('aria-selected', String(t.dataset.tab === name));
@@ -182,6 +258,7 @@
     if (name === 'logs') refreshLogs();
   }
   $$('.tab').forEach((t) => t.addEventListener('click', () => selectTab(t.dataset.tab)));
+  window.addEventListener('popstate', () => { if (!$('#view-app').hidden) selectTab(tabFromHash()); }); // tombol back/forward
 
   // ---------- dokumen ----------
   async function refreshDocs() {
@@ -572,6 +649,17 @@
   });
 
   // ---------- tes tanya ----------
+  // "groq:openai/gpt-oss-120b" -> Groq + nama model; jawaban dari cache atau tanpa LLM ditandai tersendiri
+  function llmCell(r) {
+    if (r.cached) return h('span', { class: 'muted' }, 'Cache');
+    if (!r.llm) return '-';
+    const i = r.llm.indexOf(':');
+    const provider = i < 0 ? r.llm : r.llm.slice(0, i);
+    const model = i < 0 ? '' : r.llm.slice(i + 1);
+    return h('div', {}, h('div', { class: 'title' }, provider.charAt(0).toUpperCase() + provider.slice(1)),
+      model && h('div', { class: 'sub' }, model));
+  }
+
   const STATUS_LABEL = { answered: 'Terjawab', not_found: 'Tidak ditemukan', error: 'Error' };
 
   $('#ask-form').addEventListener('submit', async (e) => {
@@ -629,9 +717,10 @@
   async function refreshLogs() {
     try {
       const rows = await api('/logs?limit=100' + (logStatus ? '&status=' + logStatus : ''));
+      const opened = new Set($$('#logs-body tr.detail:not([hidden])').map((t) => t.dataset.id));
       $('#logs-empty').hidden = rows.length > 0;
       $('#logs-body').replaceChildren(...rows.flatMap((r) => {
-        const detail = h('tr', { class: 'detail', hidden: true }, h('td', { colspan: 6 },
+        const detail = h('tr', { class: 'detail', hidden: !opened.has(String(r.id)), 'data-id': r.id }, h('td', { colspan: 7 },
           h('div', { class: 'detail-body' },
             h('div', {}, h('strong', {}, 'Jawaban: '), r.answer || '-'),
             r.sources.length > 0 && h('div', {}, h('strong', {}, 'Sumber: '), r.sources.map((s) => `[${s.n}] ${s.title}`).join('; ')),
@@ -641,6 +730,7 @@
           h('td', {}, fmtDateTime(r.created_at)),
           h('td', { 'data-label': 'Pertanyaan' }, r.question),
           h('td', { 'data-label': 'Status' }, h('span', { class: 'badge ' + r.status }, STATUS_LABEL[r.status] || r.status)),
+          h('td', { 'data-label': 'LLM' }, llmCell(r)),
           h('td', { class: 'num', 'data-label': 'Skor' }, r.top_score === null ? '-' : r.top_score.toFixed(3)),
           h('td', { 'data-label': 'Kanal' }, r.channel),
           h('td', { 'data-label': 'Feedback' }, r.feedback === 1 ? 'Membantu' : r.feedback === -1 ? 'Tidak membantu' : '-'));

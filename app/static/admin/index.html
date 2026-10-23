@@ -60,6 +60,12 @@
           <h1 id="page-title">Ikhtisar</h1>
           <p id="page-sub" class="muted">Kelola knowledge yang dipakai bot untuk menjawab.</p>
         </div>
+        <div class="topbar-tools">
+        <span id="live" class="live" data-state="paused" role="status"><i aria-hidden="true"></i>Live</span>
+        <div id="llm-switch" class="llm-switch" hidden>
+          <span class="llm-label">Model LLM</span>
+          <div id="llm-options" class="seg" role="radiogroup" aria-label="Pilih model LLM"></div>
+        </div>
         <div class="user-menu">
           <button id="user-btn" class="user-chip" type="button" aria-haspopup="menu" aria-expanded="false">
             <span id="avatar" class="avatar" aria-hidden="true">A</span>
@@ -70,6 +76,7 @@
             <button id="btn-password" type="button" role="menuitem">Ganti password</button>
             <button id="btn-logout" type="button" role="menuitem" class="danger-text">Keluar</button>
           </div>
+        </div>
         </div>
       </header>
 
@@ -159,7 +166,7 @@
           </div>
           <div class="table-wrap">
             <table class="stack">
-              <thead><tr><th>Waktu</th><th>Pertanyaan</th><th>Status</th><th class="num">Skor</th><th>Kanal</th><th>Feedback</th></tr></thead>
+              <thead><tr><th>Waktu</th><th>Pertanyaan</th><th>Status</th><th>LLM</th><th class="num">Skor</th><th>Kanal</th><th>Feedback</th></tr></thead>
               <tbody id="logs-body"></tbody>
             </table>
             <p id="logs-empty" class="empty" hidden>Belum ada log.</p>

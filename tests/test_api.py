@@ -299,3 +299,30 @@ def test_jawaban_yang_bergantung_waktu_tidak_dicache(client, indexed_doc, stub_l
     plain = "Kapan batas pengajuan cuti akademik?"
     pipeline.ask(plain)
     assert pipeline.ask(plain).cached is True
+
+
+def test_log_mencatat_llm_yang_dipakai(client, auth, indexed_doc, stub_llm):
+    ask = lambda q: client.post("/api/ask", headers={"X-API-Key": "bot-key-tes"}, json={"question": q})  # noqa: E731
+    ask("Kapan batas pengajuan cuti akademik?")                  # memanggil LLM
+    ask("Kapan batas pengajuan cuti akademik?")                  # dari cache: tanpa LLM
+    rows = client.get("/api/logs", headers=auth).json()
+    cached, fresh = rows[0], rows[1]
+    assert fresh["llm"] == "stub" and fresh["cached"] is False
+    assert cached["cached"] is True and cached["llm"] is None
+
+
+def test_log_pertanyaan_kosong_tanpa_llm(client, auth, indexed_doc, stub_llm):
+    stub_llm.reply = "TIDAK_DITEMUKAN"
+    long_q = "Siapa pemenang piala dunia sepak bola terakhir " + "dan seterusnya " * 20  # terlalu panjang untuk jalur obrolan
+    client.post("/api/ask", headers={"X-API-Key": "bot-key-tes"}, json={"question": long_q})
+    row = client.get("/api/logs", headers=auth).json()[0]
+    assert row["status"] == "not_found" and row["llm"] is None  # pesan baku tanpa memanggil LLM
+
+
+def test_pulse_butuh_login_dan_berubah_saat_data_berubah(client, auth, indexed_doc, stub_llm):
+    assert client.get("/api/pulse").status_code == 401
+    before = client.get("/api/pulse", headers=auth).json()
+    assert before == client.get("/api/pulse", headers=auth).json()  # tanpa perubahan data: penanda sama
+    client.post("/api/ask", headers={"X-API-Key": "bot-key-tes"}, json={"question": "Kapan batas pengajuan cuti akademik?"})
+    after = client.get("/api/pulse", headers=auth).json()
+    assert after["logs"] != before["logs"] and after["docs"] == before["docs"]

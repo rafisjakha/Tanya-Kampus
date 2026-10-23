@@ -200,6 +200,9 @@ Semua lewat `.env` (lihat `.env.example`). Yang paling relevan:
 | `MAX_UPLOAD_MB` | `25` | Batas ukuran upload. |
 | `DATA_DIR` | `./data` | Lokasi database dan file asli. |
 
+Model LLM bisa diganti kapan saja lewat toggle **Model LLM** (Groq / Gemini) di pojok kanan atas panel admin. Pilihannya berlaku langsung untuk panel dan bot, dan tersimpan di database. Provider yang kuncinya belum diisi di `.env` tidak bisa dipilih; `LLM_PROVIDER` hanya menentukan pilihan awal.
+
+
 ## API ringkas
 
 Dokumentasi interaktif ada di `/docs`.

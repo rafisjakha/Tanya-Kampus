@@ -223,6 +223,27 @@ select { appearance: none; padding-right: 36px; cursor: pointer;
 .topbar { display: flex; align-items: flex-start; gap: 16px; justify-content: space-between; }
 .page-head p { margin: 2px 0 0; font-size: 13px; }
 
+.topbar-tools { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+.live { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); opacity: .6; }
+.live[data-state="on"] { color: var(--ok); }
+.live[data-state="on"] i { background: var(--ok); opacity: 1; animation: livepulse 2s ease-out infinite; }
+.live[data-state="off"] { color: var(--danger); }
+.live[data-state="off"] i { background: var(--danger); opacity: 1; }
+@keyframes livepulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 55%, transparent); } 70%, 100% { box-shadow: 0 0 0 7px transparent; } }
+.llm-switch { display: flex; align-items: center; gap: 10px; }
+.llm-label { font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); }
+.seg button {
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: 0; background: transparent; color: var(--muted);
+  padding: 6px 16px; border-radius: 999px; transition: background .15s, color .15s; white-space: nowrap;
+}
+.seg button:hover:not(:disabled):not([aria-checked="true"]) { color: var(--text); }
+.seg button[aria-checked="true"] { background: var(--grad-primary); color: #fff; box-shadow: var(--shadow-btn); }
+.seg button:disabled { opacity: .45; cursor: not-allowed; }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg.busy { opacity: .6; pointer-events: none; }
+@media (max-width: 720px) { .topbar { flex-wrap: wrap; } .topbar-tools { width: 100%; justify-content: space-between; } }
 .user-menu { position: relative; flex: none; }
 .user-chip {
   font: inherit; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer;

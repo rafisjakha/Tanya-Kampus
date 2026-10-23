@@ -10,7 +10,7 @@ from fastapi import HTTPException
 
 from .config import get_settings
 from .rag.embeddings import Embedder, build_embedder
-from .rag.llm import build_llm
+from .rag.llm import LLM_CHOICES, SwitchableLLM, build_llm
 from .rag.pipeline import Pipeline
 from .rag.search import Retriever
 
@@ -28,9 +28,26 @@ def get_embedder() -> Embedder:
 
 
 @lru_cache(maxsize=1)
+def _llm():
+    """Groq/Gemini bisa diganti dari panel admin. Mode tes (extractive) tidak punya pilihan."""
+    settings = get_settings()
+    return SwitchableLLM(settings) if settings.llm_provider in LLM_CHOICES else build_llm(settings)
+
+
+def get_llm_switch() -> SwitchableLLM:
+    try:
+        llm = _llm()
+    except (ValueError, RuntimeError) as exc:
+        raise HTTPException(503, str(exc))
+    if not isinstance(llm, SwitchableLLM):
+        raise HTTPException(409, "Pilihan LLM tidak tersedia pada mode tes (LLM_PROVIDER=extractive).")
+    return llm
+
+
+@lru_cache(maxsize=1)
 def _pipeline() -> Pipeline:
     settings = get_settings()
-    return Pipeline(Retriever(_embedder(), settings), build_llm(settings), settings)
+    return Pipeline(Retriever(_embedder(), settings), _llm(), settings)
 
 
 def get_pipeline() -> Pipeline:

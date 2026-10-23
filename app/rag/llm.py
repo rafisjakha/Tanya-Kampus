@@ -209,3 +209,79 @@ def build_llm(settings: Settings) -> LLMClient:
             )
         return GeminiClient(settings.gemini_api_key, settings.gemini_model)
     raise ValueError(f"LLM_PROVIDER tidak dikenal: {provider!r} (pilihan: groq, gemini, extractive)")
+
+
+# --- pilihan penyedia saat berjalan ------------------------------------------------------------------
+
+LLM_CHOICES = ("groq", "gemini")
+LLM_LABELS = {"groq": "Groq", "gemini": "Gemini"}
+LLM_META_KEY = "llm_provider"
+KEY_VARS = {"groq": "GROQ_API_KEY", "gemini": "GEMINI_API_KEY"}
+
+
+class SwitchableLLM:
+    """Memilih penyedia LLM pada tiap permintaan.
+
+    Pilihan dari panel admin disimpan di tabel `meta` (tetap ada setelah restart dan berlaku untuk semua proses).
+    Tanpa pilihan itu, dipakai LLM_PROVIDER dari .env. Klien dibuat sekali per penyedia lalu dipakai ulang.
+    """
+
+    def __init__(self, settings: Settings):
+        self.settings = settings
+        self._clients: dict[str, LLMClient] = {}
+        self._client(self.active())  # gagal lebih awal (kunci belum diisi) supaya pesan petunjuknya jelas
+
+    def has_key(self, provider: str) -> bool:
+        return bool(getattr(self.settings, f"{provider}_api_key", None))
+
+    def model(self, provider: str) -> str:
+        return getattr(self.settings, f"{provider}_model")
+
+    def override(self) -> str | None:
+        """Pilihan dari panel admin, atau None bila belum pernah memilih (atau penyedianya tak lagi tersedia)."""
+        from ..db import db
+
+        try:
+            with db() as conn:
+                row = conn.execute("SELECT value FROM meta WHERE key = ?", (LLM_META_KEY,)).fetchone()
+        except Exception:  # noqa: BLE001 - database belum siap: pakai nilai dari .env
+            return None
+        value = row["value"] if row else None
+        return value if value in LLM_CHOICES and self.has_key(value) else None
+
+    def active(self) -> str:
+        return self.override() or self.settings.llm_provider
+
+    @property
+    def name(self) -> str:
+        provider = self.active()
+        return f"{provider}:{self.model(provider)}"
+
+    def set_active(self, provider: str) -> None:
+        from ..db import db
+
+        if provider not in LLM_CHOICES:
+            raise ValueError(f"Penyedia tidak dikenal: {provider!r} (pilihan: {', '.join(LLM_CHOICES)})")
+        if not self.has_key(provider):
+            raise RuntimeError(f"{KEY_VARS[provider]} belum diisi di .env, jadi {LLM_LABELS[provider]} belum bisa dipakai.")
+        self._client(provider)
+        with db() as conn:
+            conn.execute(
+                "INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                (LLM_META_KEY, provider),
+            )
+
+    def _client(self, provider: str) -> LLMClient:
+        if provider not in self._clients:
+            from dataclasses import replace
+
+            self._clients[provider] = build_llm(replace(self.settings, llm_provider=provider))
+        return self._clients[provider]
+
+    def generate(self, system: str, prompt: str) -> str:
+        provider = self.active()
+        try:
+            client = self._client(provider)
+        except RuntimeError as exc:  # kunci dihapus dari .env setelah server jalan
+            raise LLMError(str(exc)) from exc
+        return client.generate(system, prompt)

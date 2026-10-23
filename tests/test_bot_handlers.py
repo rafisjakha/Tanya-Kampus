@@ -48,11 +48,14 @@ def make_context(api, admin_ids=(), args=None):
         "api": api,
         "cooldown": Cooldown(3),
         "history": ChatHistory(),
+        "start_kb_shown": set(),
         "start_guard": Cooldown(0),  # tes penjaga klik ganda membuat Cooldown sendiri
         "sessions": Sessions(0),  # 0 = tanpa batas waktu; tes sesi membuat Sessions sendiri
         "settings": SimpleNamespace(admin_telegram_ids=frozenset(admin_ids)),
     })
-    return SimpleNamespace(application=app, bot=SimpleNamespace(send_chat_action=AsyncMock(), send_message=AsyncMock()), args=args or [])
+    return SimpleNamespace(application=app, bot=SimpleNamespace(send_chat_action=AsyncMock(),
+                                                       send_message=AsyncMock(return_value=SimpleNamespace(delete=AsyncMock()))),
+                            args=args or [])
 
 
 ANSWER = {"query_id": 5, "status": "answered", "answer": "Butuh 8 kali bimbingan [1].",
@@ -354,7 +357,7 @@ def test_tanpa_start_pesan_ditolak_dan_diminta_start():
     run(bot.on_text(upd, ctx))
     assert api.asked == []
     markup = upd.message.reply_text.call_args.kwargs["reply_markup"]
-    assert callback_data(markup) == ["session:start"]
+    assert [b.text for row in markup.keyboard for b in row] == ["Mulai"]  # tombol di bawah kolom ketik
 
 
 def test_setelah_start_pertanyaan_dijawab():
@@ -497,3 +500,30 @@ def test_pesan_yang_diedit_tidak_ditangani():
     for update in (Update(update_id=1, edited_message=msg),):
         assert not any(h.check_update(update) for h in handlers)
     assert any(h.check_update(Update(update_id=2, message=msg)) for h in handlers)  # pesan baru tetap ditangani
+
+
+def test_tombol_mulai_di_bawah_kolom_ketik_memulai_sesi():
+    api = FakeApi(ANSWER)
+    ctx = session_context(api)
+    upd = make_update(text="Mulai")
+    run(bot.on_text(upd, ctx))
+    assert api.asked == []  # "Mulai" bukan pertanyaan
+    assert upd.message.reply_text.call_args.args[0] == bot.WELCOME
+    run(bot.on_text(make_update(text="Apa syarat sidang?"), ctx))
+    assert len(api.asked) == 1  # sesi sudah aktif
+
+
+def test_keyboard_mulai_dihapus_saat_pengguna_mengetik_start():
+    ctx = session_context(FakeApi(ANSWER))
+    run(bot.on_text(make_update(text="halo"), ctx))  # belum mulai: tombol "Mulai" ditampilkan
+    assert 1 in ctx.application.bot_data["start_kb_shown"]
+    run(bot.cmd_start(make_update(), ctx))
+    from telegram import ReplyKeyboardRemove
+    kwargs = ctx.bot.send_message.call_args.kwargs
+    assert isinstance(kwargs["reply_markup"], ReplyKeyboardRemove)
+    assert 1 not in ctx.application.bot_data["start_kb_shown"]
+
+
+def test_pemberitahuan_sesi_berakhir_memakai_tombol_mulai():
+    from app.bot.formatting import session_expired_text
+    assert "Mulai" in session_expired_text(60)

@@ -71,6 +71,10 @@ class DocUpdateIn(BaseModel):
         return validate_date(v) if v is not None else None
 
 
+class LlmChoiceIn(BaseModel):
+    provider: str = Field(min_length=1, max_length=20)
+
+
 class HistoryTurn(BaseModel):
     question: str = Field(max_length=2000)
     answer: str = Field(max_length=4000)

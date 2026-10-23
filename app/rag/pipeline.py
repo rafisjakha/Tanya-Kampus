@@ -29,6 +29,7 @@ from .prompt import (
     build_rewrite_prompt,
 )
 from .search import Hit, Retriever
+from .textclean import clean_answer
 
 CHAT_MAX_WORDS = 30  # pesan lebih panjang langsung memakai pesan 'tidak ditemukan' baku (hemat kuota)
 REWRITE_MAX_WORDS = 15  # pesan lebih panjang dianggap sudah berdiri sendiri (tanpa panggilan LLM tambahan)
@@ -134,20 +135,20 @@ class Pipeline:
     # -- log ----------------------------------------------------------------------------------
 
     def _log(self, *, question, category, channel, user_ref, status, answer, top_score,
-             sources, latency_ms, cached=False, error=None) -> int:
+             sources, latency_ms, cached=False, error=None, llm=None) -> int:
         with db() as conn:
             cur = conn.execute(
                 """
                 INSERT INTO query_log(channel, user_ref, question, category, status, answer,
-                                      top_score, sources_json, latency_ms, cached, error)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                      top_score, sources_json, latency_ms, cached, error, llm)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (channel, user_ref, question, category, status, answer, top_score,
-                 json.dumps(sources, ensure_ascii=False), latency_ms, int(cached), error),
+                 json.dumps(sources, ensure_ascii=False), latency_ms, int(cached), error, llm),
             )
             return int(cur.lastrowid)
 
-    def _standalone(self, question: str, history: list[tuple[str, str]] | None) -> str:
+    def _standalone(self, question: str, history: list[tuple[str, str]] | None, used: list[int]) -> str:
         """Tulis ulang pesan lanjutan ("kalo hari kamis?") menjadi pertanyaan lengkap memakai riwayat chat.
 
         Satu panggilan LLM, hanya bila ada riwayat dan pesannya pendek. Gagal atau hasilnya janggal: pakai pesan asli.
@@ -155,6 +156,7 @@ class Pipeline:
         if not history or len(question.split()) > REWRITE_MAX_WORDS:
             return question
         turns = [(q[:HISTORY_MAX_CHARS], a[:HISTORY_MAX_CHARS]) for q, a in history[-HISTORY_MAX_TURNS:]]
+        used[0] += 1
         try:
             raw = self.llm.generate(REWRITE_PROMPT, build_rewrite_prompt(turns, question))
         except LLMError:
@@ -165,10 +167,11 @@ class Pipeline:
             return question
         return text[: self.settings.max_question_chars]
 
-    def _llm_fallback(self, question: str, now_text: str | None = None) -> tuple[str, str]:
+    def _llm_fallback(self, question: str, now_text: str | None, used: list[int]) -> tuple[str, str]:
         """Balasan LLM saat dokumen tidak menjawab: ("answered", obrolan ringan) atau ("not_found", pesan ramah)."""
         if len(question.split()) > CHAT_MAX_WORDS:
             return "not_found", NOT_FOUND_MESSAGE
+        used[0] += 1
         try:
             prompt = f"WAKTU SEKARANG: {now_text}\n\nPESAN: {question}" if now_text else question
             raw = self.llm.generate(CHAT_PROMPT, prompt).strip()
@@ -199,12 +202,14 @@ class Pipeline:
         category = category or None
 
         standalone: str | None = None
+        used = [0]  # jumlah panggilan LLM pada permintaan ini (dicatat di log bersama nama modelnya)
 
         def finish(status, answer, sources=None, top=None, cached=False, error=None, hits=None):
             qid = self._log(
                 question=question, category=category, channel=channel, user_ref=user_ref,
                 status=status, answer=answer, top_score=top, sources=sources or [],
                 latency_ms=int((time.perf_counter() - started) * 1000), cached=cached, error=error,
+                llm=getattr(self.llm, "name", None) if used[0] else None,
             )
             return AskResult(qid, status, answer, sources or [], top, cached, hits or [], standalone)
 
@@ -212,7 +217,7 @@ class Pipeline:
             return finish("not_found", NOT_FOUND_MESSAGE)
 
         # 0. pesan lanjutan dilengkapi dari riwayat chat; log tetap mencatat pesan asli
-        search_q = self._standalone(question, history)
+        search_q = self._standalone(question, history, used)
         if search_q != question:
             standalone = search_q
         # waktu server: "hari ini"/"besok"/"sekarang" diganti nama hari sebenarnya (baris jadwal memuat nama hari)
@@ -234,19 +239,21 @@ class Pipeline:
         debug_hits = [h.to_debug() for h in hits]
         top = hits[0].score if hits else None
         if not hits or top < self.settings.score_threshold:
-            status, text = self._llm_fallback(search_q, now_text)
+            status, text = self._llm_fallback(search_q, now_text, used)
             return finish(status, text, top=top, hits=debug_hits)
 
         # 3. generate
+        used[0] += 1
         try:
             raw = self.llm.generate(SYSTEM_PROMPT, build_prompt(search_q, hits, now_text))
         except LLMError as exc:
             return finish("error", ERROR_MESSAGE, top=top, error=str(exc), hits=debug_hits)
 
         if raw.strip().strip(".").upper() == NOT_FOUND_TOKEN or raw.strip().startswith(NOT_FOUND_TOKEN):
-            status, text = self._llm_fallback(search_q, now_text)
+            status, text = self._llm_fallback(search_q, now_text, used)
             return finish(status, text, top=top, hits=debug_hits)
 
+        raw = clean_answer(raw)
         sources = _cited_sources(raw, hits)
         if not time_sensitive:
             with db() as conn:
