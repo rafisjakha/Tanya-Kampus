@@ -15,6 +15,13 @@ Menurut Pedoman Akademik 2024:
 - Beban SKS KP mengikuti Rencana Pembelajaran Semester (RPS). Pengalaman kerja yang sudah dimiliki bisa diakui lewat Rekognisi Pembelajaran Lampau (RPL).
 - Syarat pendaftaran, alur pengajuan, format laporan, dan jadwal KP ditetapkan oleh fakultas dan Prodi. Tanyakan ke Prodi S1 Teknologi Informasi.
 
+## Aplikasi dan template KP (Apps-SoC Fakultas Informatika)
+KP dikelola lewat aplikasi SiKaPe (Sistem Informasi Kerja Praktek) di portal Apps-SoC Fakultas Informatika, https://apps-soc.telkomuniversity.ac.id/ (login dengan akun SSO mahasiswa). Menu yang tersedia:
+- Data Kerja Praktek: data KP dan pembimbing.
+- Unggah Dokumen: mengunggah berkas KP.
+- Penilaian: nilai KP dari Pembimbing Lapangan dan Pembimbing Akademik.
+- Tautan Penting: Form Bimbingan KP, Template Laporan KP, dan Template Proposal KP.
+
 ## Beban studi dan masa studi (program sarjana)
 - Beban belajar 144 sampai 160 SKS. Masa studi normal 8 semester, paling cepat 7 semester, paling lama 12 semester untuk mahasiswa penuh waktu.
 - Bila sampai batas masa studi belum lulus, mahasiswa bisa mengajukan undur diri atau perpanjangan paling lama 4 semester lewat sidang akademik.
@@ -40,6 +47,16 @@ Menurut Pedoman Akademik 2024:
 - Pembimbing satu adalah dosen tetap minimal S2 dengan jabatan akademik minimal Asisten Ahli. Pembimbing dua bersifat opsional, bisa dosen dengan syarat yang sama atau praktisi berpengalaman yang disetujui pembimbing satu atau Prodi.
 - Asesmen TA bisa berupa sidang atau bentuk lain yang ditetapkan fakultas. Sidang diuji dua penguji, salah satunya ketua sidang.
 - Laporan TA harus asli: bukan buatan orang lain, bukan hasil kecerdasan buatan, dan bebas plagiat. Plagiat bisa berujung pembatalan kelulusan, dikeluarkan, atau pencabutan ijazah bila ketahuan setelah lulus.
+
+## Aplikasi, panduan, dan template TA (Apps-SoC Fakultas Informatika)
+Proposal TA dikelola lewat aplikasi SiPProp (Sistem Informasi Penulisan Proposal) di portal Apps-SoC, https://apps-soc.telkomuniversity.ac.id/ (login dengan akun SSO mahasiswa). Menu Tautan Penting di portal itu menyediakan dokumen resmi berikut:
+- Panduan Penulisan Proposal dan Tugas Akhir (2024)
+- Panduan Tugas Literature Review Penulisan Proposal, RPS dan slide materi mata kuliah Penulisan Proposal
+- Template Proposal FIF (DOCX dan LaTeX) dan Template Laporan Tugas Akhir
+- Tahapan Pendaftaran Sidang dan Persyaratan Sidang TA, serta Panduan Pelaksanaan Sidang TA
+- Template Surat Pernyataan Sidang TA, Response Form, dan User Manual aplikasi SiPeTA untuk mahasiswa
+- Surat Keterangan Index Publikasi (ditandatangani pembimbing) dan Pakta Integritas Publish Paper
+- Dokumen Perlengkapan Pendaftaran Yudisium, serta Cara Pembayaran Wisuda dan Panduan Pembuatan Poster
 
 ## Standar luaran Tugas Akhir (skripsi sarjana)
 Mahasiswa bisa memilih jalur TA:
@@ -71,4 +88,5 @@ Kelulusan ditetapkan lewat keputusan Rektor berdasarkan rekomendasi sidang yudis
 - Persyaratan Kelulusan Studi dan Standar Luaran Tugas Akhir, PU.027/AKD11/AKD-BPA/2024 (23 September 2024). https://bpa.telkomuniversity.ac.id/wp-content/uploads/2024/11/PU_PERSYARATAN_KELULUSAN_STUDI_DAN_STANDAR_LUARAN_TUGAS_AKHIR.pdf
 - Aturan Peralihan Pedoman Akademik 2022 ke 2024, PU.026/AKD03/AKD-BPA/2024 (16 September 2024). https://bpa.telkomuniversity.ac.id/wp-content/uploads/2024/11/PU-ATURAN-PERALIHAN-PEDAK-2022-KE-PEDAK-2024.pdf
 - Kurikulum Reguler dan Kurikulum MBKM/WRAP: https://bit-jkt.telkomuniversity.ac.id/
+- Portal Apps-SoC Fakultas Informatika (SiKaPe, SiPProp, dan Tautan Penting): https://apps-soc.telkomuniversity.ac.id/
 Semua diakses 24 Oktober 2026.
