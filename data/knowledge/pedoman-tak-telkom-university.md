@@ -77,4 +77,4 @@ Bila organisasi tidak diambil di tingkat II atau III, kegiatan pilihan di tingka
 - Angkatan 2020 dan sebelumnya: berlaku kecuali kewajiban PKKMB dan rincian kegiatan wajib.
 
 ## Sumber
-Peraturan Rektor Universitas Telkom No. KR.362/MHS6/KMH-KKM/2022, https://bolif.telkomuniversity.ac.id/wp-content/uploads/2023/06/SK-TAK-2022.pdf (diakses 24 Oktober 2026). Peraturan ini ditetapkan di Bandung sebelum kampus Jakarta bergabung ke Telkom University. Konfirmasi ke LAAK atau Prodi apakah kampus Jakarta memakai aturan dan sistem pelaporan yang sama.
+Peraturan Rektor Universitas Telkom No. KR.362/MHS6/KMH-KKM/2022, https://bolif.telkomuniversity.ac.id/wp-content/uploads/2023/06/SK-TAK-2022.pdf (diakses 24 Oktober 2026). Ini peraturan TAK Telkom University terbaru yang ditemukan per 24 Oktober 2026. Mahasiswa S1 Telkom University Jakarta wajib mencapai nilai minimal 60. Bila ada ketentuan pelaporan khusus di kampus Jakarta, ikuti arahan LAAK Telkom University Jakarta.

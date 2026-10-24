@@ -70,7 +70,7 @@ Direktori ini akan dimasukkan sebagai satu dokumen berkategori `kontak` di panel
 
 ## 6. Hal yang perlu diputuskan dalam rapat
 
-1. Untuk pertanyaan akademik, unit yang dituju **Kemahasiswaan** (sesuai rapat 23 Oktober) atau layanan akademik (BAA/LAA)?
+1. Untuk pertanyaan akademik, unit yang dituju **Kemahasiswaan** (sesuai rapat 23 Oktober) atau **Layanan Akademik**? FAQ resmi Telkom University Jakarta membedakan keduanya: Layanan Akademik mengurus perkuliahan, kurikulum, jadwal, dan administrasi akademik, sedangkan Kemahasiswaan mengurus UKM, lomba, dan minat bakat. Bot saat ini mengikuti pembagian resmi tersebut.
 2. Kontak mana saja yang **boleh ditampilkan** oleh bot, misalnya nomor WhatsApp pribadi atau hanya kanal resmi?
 3. Siapa **PIC Prodi** untuk mengirim dan memperbarui dokumen, dan seberapa sering dokumen diperbarui (setiap semester atau setiap ada perubahan)?
 4. Apa **nama dan skema MBKM** yang masih berlaku di Prodi saat ini?
@@ -83,16 +83,16 @@ Tim sudah menyusun dokumen awal dari situs resmi (diakses 24 Oktober 2026), ada 
 
 | Topik | Yang sudah ada | Sumber | Yang masih dibutuhkan dari Prodi |
 |---|---|---|---|
-| Kontak | Hotline Direktorat Kampus Jakarta, IT Service Desk (WhatsApp dan tiket SITU), Suara TelUtizen, Satgas PPKPT, formulir keluhan fasilitas | jakarta.telkomuniversity.ac.id, servicedesk.telkomuniversity.ac.id | Kontak **LAAK/Kemahasiswaan Jakarta**, **Keuangan**, admin Prodi, koordinator KP/magang, PIC MBKM |
-| TAK | Nilai minimal (S1: 60), kegiatan wajib, tabel poin, cara dan batas pelaporan | Peraturan Rektor KR.362/MHS6/KMH-KKM/2022 | Konfirmasi bahwa aturan dan sistem pelaporannya sama untuk kampus Jakarta |
-| Kerja Praktik | Kode dan bobot (CBK4BAB3, 3 SKS), semester 7 (reguler) atau 6 (MBKM/WRAP) | Kurikulum di bit-jkt.telkomuniversity.ac.id | **Syarat, alur pendaftaran, format laporan, penilaian** |
-| MBKM | Slot MK MBKM I sampai VIII (24 SKS) di semester 7 dan 8 jalur MBKM/WRAP | Kurikulum di bit-jkt.telkomuniversity.ac.id | **Program yang diakui, syarat, cara konversi nilai**. Panduan MBKM Tel-U 2024 sudah tidak bisa diakses. |
-| Tugas Akhir | Bobot 4 SKS di semester 8, didahului Penulisan Proposal | Kurikulum Prodi | Pedoman TA Prodi |
+| Kontak | Hotline resmi Telkom University Jakarta: Layanan Akademik, Kemahasiswaan, Karir & Alumni, Keuangan (KUG), Helpdesk IT DTI Jakarta, Prodi S1 TI, Logistik, Openlibrary, Direktorat Kampus, PPKPT, Suara TelUtizen | FAQ dan beranda jakarta.telkomuniversity.ac.id | Konfirmasi nomor masih aktif; kontak koordinator KP/magang dan PIC MBKM bila berbeda dari hotline Prodi |
+| TAK | Nilai minimal (S1: 60, syarat lulus sidang yudisium), kegiatan wajib, tabel poin, cara dan batas pelaporan | Peraturan Rektor Telkom University KR.362/MHS6/KMH-KKM/2022 (terbaru yang ditemukan) | Konfirmasi tata cara pelaporan TAK di kampus Jakarta |
+| Kerja Praktik | Kode dan bobot (CBK4BAB3, 3 SKS), semester 7 (reguler) atau 6 (MBKM/WRAP) | Kurikulum di bit-jkt.telkomuniversity.ac.id | **Syarat, alur, format laporan, penilaian**, Buku Panduan KP dan formulirnya |
+| MBKM | Slot MK MBKM I sampai VIII (24 SKS) di semester 7 dan 8 jalur MBKM/WRAP | Kurikulum di bit-jkt.telkomuniversity.ac.id | **Program yang diakui dan cara konversi nilai ke MK MBKM**. Panduan MBKM Tel-U 2024 sudah tidak bisa diakses. |
+| Tugas Akhir | Bobot 4 SKS di semester 8, didahului Penulisan Proposal | Kurikulum Prodi | Pedoman dan template TA Prodi |
 | Innovillage | Gambaran program, kanal pendaftaran, pendanaan, jadwal edisi 2025 | innovillage.id, berita resmi | Alur dan pengakuan SKS untuk mahasiswa TI Jakarta |
-| Magang | Belum ada sumber resmi khusus Jakarta | | **Pedoman magang Prodi** |
+| Magang | Magang sebagai bentuk kegiatan MBKM, CDC Telkom University Jakarta | Panduan MBKM Tel-U 2024, situs kampus Jakarta | **Pedoman magang Prodi**, pengakuan SKS, daftar mitra |
 | Template | Belum ada | | **Semua template** yang boleh dipakai mahasiswa |
 
-Catatan: situs kampus Jakarta menautkan "Pedoman Akademik ITTJ 2022" dan "Pedoman Kemahasiswaan 2022". Mohon konfirmasi apakah keduanya masih berlaku setelah penggabungan ke Telkom University.
+Catatan: aturan akademik terbaru Telkom University adalah **Pedoman Akademik Telkom University 2024** (PU.022/AKD01/AKD-BPA/2024), beserta aturan peralihan dari Pedoman 2022 dan peraturan persyaratan kelulusan dan standar luaran Tugas Akhir. Mohon konfirmasi bahwa ketiganya berlaku untuk mahasiswa S1 Teknologi Informasi Telkom University Jakarta.
 
 ## 8. Rencana tim setelah data diterima
 

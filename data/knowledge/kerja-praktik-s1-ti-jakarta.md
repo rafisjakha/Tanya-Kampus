@@ -1,11 +1,11 @@
-# Kerja Praktik dan Tugas Akhir di Kurikulum S1 Teknologi Informasi Kampus Jakarta
+# Kerja Praktik dan Tugas Akhir di S1 Teknologi Informasi Telkom University Jakarta
 
 ## Kerja Praktik (KP)
 - Kode mata kuliah: CBK4BAB3, bobot 3 SKS.
-- Kurikulum reguler: KP diambil di semester 7.
-- Kurikulum MBKM/WRAP: KP diambil di semester 6.
+- Kurikulum reguler: KP ada di semester 7.
+- Kurikulum MBKM/WRAP: KP ada di semester 6.
 
-Syarat pendaftaran KP, alur pengajuan, format laporan, dan cara penilaiannya belum tercantum di situs resmi Prodi. Tanyakan ke Prodi S1 Teknologi Informasi Kampus Jakarta.
+Syarat pendaftaran KP, alur pengajuan, format laporan, dan cara penilaiannya belum tercantum di sumber resmi yang tersedia. Tanyakan ke Prodi S1 Teknologi Informasi Telkom University Jakarta.
 
 ## Mata kuliah akhir lainnya
 Kurikulum reguler:
@@ -19,16 +19,16 @@ Kurikulum MBKM/WRAP:
 - Semester 7: Penulisan Proposal (2 SKS), Proyek Teknologi Informasi (3 SKS), MK MBKM I sampai IV (masing-masing 3 SKS). Total 17 SKS.
 - Semester 8: Tugas Akhir (4 SKS) dan MK MBKM V sampai VIII (masing-masing 3 SKS). Total 16 SKS.
 
-## Tugas Akhir
-- Bobot 4 SKS, diambil di semester 8 pada kedua kurikulum.
-- Didahului Penulisan Proposal (2 SKS) di semester 7.
+## Tugas Akhir (TA)
+- Bobot 4 SKS di semester 8 pada kedua kurikulum, didahului Penulisan Proposal (2 SKS) di semester 7.
 - Hasil capstone mahasiswa dapat dilihat di Capstone Database: https://repository.ittelkom-jkt.ac.id/
+- Syarat sidang dan syarat kelulusan mengikuti peraturan akademik Telkom University yang berlaku. Tanyakan ke Prodi untuk rinciannya.
 
 ## Kekhasan Prodi
-Prodi S1 Teknologi Informasi Kampus Jakarta berfokus pada pembangunan sistem berbasis komputer untuk tiga bidang: Creative Industry, Digital Economy, dan Entrepreneurship (CDE). Bidang kajiannya antara lain Cyber Security, Internet of Things, dan Artificial Intelligence. Mata kuliah pilihan yang mendukung ketiga bidang itu wajib diambil setelah mata kuliah wajib terpenuhi.
+Prodi S1 Teknologi Informasi Telkom University Jakarta berfokus pada sistem berbasis komputer untuk Creative Industry, Digital Economy, dan Entrepreneurship (CDE), dengan bidang kajian seperti Cyber Security, Internet of Things, dan Artificial Intelligence. Mata kuliah pilihan yang mendukung ketiga bidang itu wajib diambil setelah mata kuliah wajib terpenuhi.
 
 ## Sumber
-Situs resmi Prodi S1 Teknologi Informasi Telkom University Kampus Jakarta, diakses 24 Oktober 2026:
+Situs resmi Prodi S1 Teknologi Informasi Telkom University Jakarta, diakses 24 Oktober 2026:
 - Kurikulum Reguler: https://bit-jkt.telkomuniversity.ac.id/kurikulum-reguler/
 - Kurikulum MBKM dan WRAP: https://bit-jkt.telkomuniversity.ac.id/kurikulum-mbkm-wrap/
 - Informasi Prodi: https://bit-jkt.telkomuniversity.ac.id/informasi

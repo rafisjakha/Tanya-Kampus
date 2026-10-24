@@ -2,8 +2,11 @@
 
 Direktori kontak adalah satu dokumen yang **selalu dikirim ke LLM** di setiap pertanyaan. Bot memakainya untuk mengarahkan mahasiswa ke unit yang tepat:
 
-- **Kendala layanan** (pembayaran, akun kampus, layanan bermasalah) diarahkan ke hotline Tel-U Jakarta atau unit yang menanganinya.
-- **Urusan akademik** diarahkan ke Kemahasiswaan.
+- **Kendala layanan** (pembayaran, akun kampus, fasilitas) diarahkan ke unit yang menanganinya.
+- **Urusan akademik** diarahkan ke Layanan Akademik, dan **kegiatan kemahasiswaan** (UKM, lomba, minat bakat) ke Kemahasiswaan. Pembagian ini mengikuti FAQ resmi Telkom University Jakarta.
+- **Bila tidak jelas harus ke mana**, diarahkan ke hotline umum.
+
+Versi terisi dari sumber resmi sudah tersedia di `data/knowledge/direktori-kontak-tel-u-jakarta.md`. Template di bawah dipakai bila Prodi ingin menyusun ulang.
 
 Bot hanya menyalin kontak yang tertulis di sini dan tidak pernah mengarangnya.
 

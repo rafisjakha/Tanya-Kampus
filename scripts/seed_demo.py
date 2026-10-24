@@ -39,10 +39,14 @@ KNOWLEDGE = {
         "https://bit-jkt.telkomuniversity.ac.id/kurikulum-reguler/",
     ),
     "mbkm-s1-ti-jakarta.md": (
-        "MBKM S1 Teknologi Informasi Jakarta", "mbkm", "2026-10-24",
+        "MBKM dan Magang S1 Teknologi Informasi Jakarta", "mbkm", "2026-10-24",
         "https://bit-jkt.telkomuniversity.ac.id/kurikulum-mbkm-wrap/",
     ),
     "innovillage.md": ("Innovillage", "innovillage", "2026-10-24", "https://innovillage.id/"),
+    "profil-prodi-s1-ti-jakarta.md": (
+        "Profil Prodi S1 Teknologi Informasi Telkom University Jakarta", "umum", "2026-10-24",
+        "https://bit-jkt.telkomuniversity.ac.id/informasi/",
+    ),
 }
 
 

@@ -19,9 +19,10 @@ NOT_FOUND_MESSAGE = (
 
 # Aturan rujukan kontak, dipakai di prompt jawaban dan prompt "tidak ditemukan" (rapat Kaprodi 23 Oktober 2026).
 REFERRAL_RULE = (
-    "Kendala layanan (mis. pembayaran, akun kampus, layanan yang bermasalah) diarahkan ke hotline Tel-U Jakarta atau "
-    "unit yang menanganinya, dan urusan akademik diarahkan ke Kemahasiswaan, sesuai isi DIREKTORI KONTAK. Nama unit, "
-    "nomor, email, dan tautan disalin persis dari DIREKTORI KONTAK tanpa nomor sumber. Jangan pernah mengarang kontak."
+    "Arahkan ke unit yang tugasnya paling cocok menurut DIREKTORI KONTAK: kendala layanan (mis. pembayaran, akun kampus, "
+    "fasilitas) ke unit yang menanganinya, urusan akademik ke Layanan Akademik, dan kegiatan kemahasiswaan ke "
+    "Kemahasiswaan. Bila tidak jelas harus ke mana, arahkan ke hotline umum di DIREKTORI KONTAK. Nama unit, nomor, "
+    "email, dan tautan disalin persis dari DIREKTORI KONTAK tanpa nomor sumber. Jangan pernah mengarang kontak."
 )
 
 SYSTEM_PROMPT = f"""Kamu adalah {IDENTITY}.
