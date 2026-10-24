@@ -35,11 +35,11 @@ KNOWLEDGE = {
         "https://bolif.telkomuniversity.ac.id/wp-content/uploads/2023/06/SK-TAK-2022.pdf",
     ),
     "kerja-praktik-s1-ti-jakarta.md": (
-        "Kerja Praktik dan Tugas Akhir S1 Teknologi Informasi Jakarta", "kp", "2026-10-24",
-        "https://bit-jkt.telkomuniversity.ac.id/kurikulum-reguler/",
+        "Kerja Praktik, Tugas Akhir, dan Kelulusan S1 Teknologi Informasi Jakarta", "kp", "2026-10-24",
+        "https://bpa.telkomuniversity.ac.id/wp-content/uploads/2024/11/Pedoman-Akademik-Tel-U-2024.pdf",
     ),
     "mbkm-s1-ti-jakarta.md": (
-        "MBKM dan Magang S1 Teknologi Informasi Jakarta", "mbkm", "2026-10-24",
+        "MBKM, WRAP, dan Magang S1 Teknologi Informasi Jakarta", "mbkm", "2026-10-24",
         "https://bit-jkt.telkomuniversity.ac.id/kurikulum-mbkm-wrap/",
     ),
     "innovillage.md": ("Innovillage", "innovillage", "2026-10-24", "https://innovillage.id/"),

@@ -16,7 +16,7 @@ Menjadi Program Sarjana Teknologi Informasi berstandar internasional yang berper
 3. Menghasilkan produk dan jasa teknologi informasi yang mendukung industri kreatif, ekonomi digital, dan kewirausahaan, serta bermanfaat bagi masyarakat dan industri.
 
 ## Masa studi dan beban SKS (program reguler)
-- Masa studi minimal 4 tahun (8 semester) dan maksimal 6 tahun (12 semester).
+- Situs Prodi menyebut masa studi minimal 4 tahun (8 semester) dan maksimal 6 tahun (12 semester). Pedoman Akademik Telkom University 2024 mengatur program sarjana dirancang 8 semester, bisa ditempuh paling cepat 7 semester, dan paling lama 12 semester untuk mahasiswa penuh waktu.
 - Total SKS wajib: 144 SKS, dengan rata-rata sekitar 22 SKS per semester.
 - Perkuliahan penuh waktu, Senin sampai Jumat, dengan bahasa pengantar Bahasa Indonesia.
 - Program sertifikasi yang ditawarkan lewat kerja sama dengan lembaga sertifikasi: TOEIC, CISCO, dan sertifikasi kompetensi.

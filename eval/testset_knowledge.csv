@@ -8,9 +8,18 @@ Ketua panitia acara tingkat nasional dapat poin TAK berapa?,yes,Pedoman TAK,nasi
 Bagaimana cara melaporkan kegiatan untuk TAK?,yes,Pedoman TAK,Sistem Pelaporan TAK
 Kerja praktik diambil di semester berapa?,yes,Kerja Praktik,semester 7
 Berapa SKS mata kuliah kerja praktik?,yes,Kerja Praktik,3 SKS
-Tugas akhir berapa SKS?,yes,Kerja Praktik dan Tugas Akhir,Bobot 4 SKS
+Tugas akhir berapa SKS?,yes,Tugas Akhir,bobot 4 SKS
+Berapa skor EPrT minimal untuk daftar sidang tugas akhir?,yes,Kelulusan,450
+Apa saja syarat lulus S1?,yes,Kelulusan,"IPK minimal 2,00"
+Berapa IPK untuk dapat predikat cumlaude?,yes,Kelulusan,"3,51 sampai 3,90"
+Bentuk tugas akhir apa saja yang boleh?,yes,Kelulusan,startup
+Boleh pakai AI untuk menulis laporan tugas akhir?,yes,Kelulusan,kecerdasan buatan
+"Berapa SKS maksimal per semester kalau IPS saya 3,2?",yes,Kelulusan,24 SKS
+Siapa pembimbing akademik kerja praktik?,yes,Kerja Praktik,dosen wali
 Berapa total SKS slot MBKM di kurikulum MBKM?,yes,MBKM,24 SKS
-Apa saja bentuk kegiatan MBKM di Telkom University?,yes,MBKM,pertukaran mahasiswa
+Apa itu WRAP?,yes,WRAP,siap kerja
+Berapa SKS maksimal yang bisa diambil di luar kampus?,yes,MBKM,40 SKS
+Apa saja bentuk kegiatan MBKM di Telkom University?,yes,MBKM,pertukaran pelajar
 Bagaimana cara mendaftar Innovillage?,yes,Innovillage,my.innovillage.id
 Berapa pendanaan untuk proyek Innovillage?,yes,Innovillage,Rp30 juta
 Saya lupa password akun kampus harus menghubungi siapa?,yes,Direktori Kontak,0813-1980-0200

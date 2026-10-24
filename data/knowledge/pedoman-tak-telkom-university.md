@@ -5,6 +5,11 @@ TAK adalah rekap nilai keaktifan mahasiswa dalam kegiatan kemahasiswaan selama k
 
 Aturan yang dipakai: Peraturan Rektor Universitas Telkom Nomor KR.362/MHS6/KMH-KKM/2022 tentang Pedoman TAK, ditetapkan 2 Agustus 2022 dan berlaku sejak Tahun Akademik 2022/2023. Peraturan ini menggantikan KR.0010/MHS6/KMH/2021.
 
+## TAK wajib untuk mahasiswa S1
+Pedoman Akademik Telkom University 2024 menegaskan dua hal:
+- Untuk lulus tingkat 1 dan lanjut setelah semester 4, mahasiswa sarjana harus sudah mengikuti kegiatan wajib kemahasiswaan dan softskill tingkat 1 yang dibuktikan dengan TAK (Pasal 43).
+- Mahasiswa diploma dan sarjana wajib memiliki skor TAK minimal sesuai aturan kemahasiswaan sebagai syarat ikut yudisium (Pasal 46).
+
 ## Kegunaan TAK
 Nilai TAK menjadi syarat untuk:
 - lulus tingkat pertama, yaitu wajib mengikuti dan lulus PKKMB (orientasi mahasiswa baru),
@@ -77,4 +82,6 @@ Bila organisasi tidak diambil di tingkat II atau III, kegiatan pilihan di tingka
 - Angkatan 2020 dan sebelumnya: berlaku kecuali kewajiban PKKMB dan rincian kegiatan wajib.
 
 ## Sumber
-Peraturan Rektor Universitas Telkom No. KR.362/MHS6/KMH-KKM/2022, https://bolif.telkomuniversity.ac.id/wp-content/uploads/2023/06/SK-TAK-2022.pdf (diakses 24 Oktober 2026). Ini peraturan TAK Telkom University terbaru yang ditemukan per 24 Oktober 2026. Mahasiswa S1 Telkom University Jakarta wajib mencapai nilai minimal 60. Bila ada ketentuan pelaporan khusus di kampus Jakarta, ikuti arahan LAAK Telkom University Jakarta.
+- Peraturan Rektor Universitas Telkom No. KR.362/MHS6/KMH-KKM/2022, https://bolif.telkomuniversity.ac.id/wp-content/uploads/2023/06/SK-TAK-2022.pdf. Ini peraturan TAK Telkom University terbaru yang ditemukan per 24 Oktober 2026. Mahasiswa S1 Telkom University Jakarta wajib mencapai nilai minimal 60. Bila ada ketentuan pelaporan khusus di kampus Jakarta, ikuti arahan Kemahasiswaan Telkom University Jakarta.
+- Pedoman Akademik Telkom University 2024, PU.022/AKD01/AKD-BPA/2024, Pasal 43 dan 46. https://bpa.telkomuniversity.ac.id/wp-content/uploads/2024/11/Pedoman-Akademik-Tel-U-2024.pdf
+Diakses 24 Oktober 2026.

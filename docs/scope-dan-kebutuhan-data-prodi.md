@@ -85,14 +85,14 @@ Tim sudah menyusun dokumen awal dari situs resmi (diakses 24 Oktober 2026), ada 
 |---|---|---|---|
 | Kontak | Hotline resmi Telkom University Jakarta: Layanan Akademik, Kemahasiswaan, Karir & Alumni, Keuangan (KUG), Helpdesk IT DTI Jakarta, Prodi S1 TI, Logistik, Openlibrary, Direktorat Kampus, PPKPT, Suara TelUtizen | FAQ dan beranda jakarta.telkomuniversity.ac.id | Konfirmasi nomor masih aktif; kontak koordinator KP/magang dan PIC MBKM bila berbeda dari hotline Prodi |
 | TAK | Nilai minimal (S1: 60, syarat lulus sidang yudisium), kegiatan wajib, tabel poin, cara dan batas pelaporan | Peraturan Rektor Telkom University KR.362/MHS6/KMH-KKM/2022 (terbaru yang ditemukan) | Konfirmasi tata cara pelaporan TAK di kampus Jakarta |
-| Kerja Praktik | Kode dan bobot (CBK4BAB3, 3 SKS), semester 7 (reguler) atau 6 (MBKM/WRAP) | Kurikulum di bit-jkt.telkomuniversity.ac.id | **Syarat, alur, format laporan, penilaian**, Buku Panduan KP dan formulirnya |
-| MBKM | Slot MK MBKM I sampai VIII (24 SKS) di semester 7 dan 8 jalur MBKM/WRAP | Kurikulum di bit-jkt.telkomuniversity.ac.id | **Program yang diakui dan cara konversi nilai ke MK MBKM**. Panduan MBKM Tel-U 2024 sudah tidak bisa diakses. |
-| Tugas Akhir | Bobot 4 SKS di semester 8, didahului Penulisan Proposal | Kurikulum Prodi | Pedoman dan template TA Prodi |
+| Kerja Praktik | Kode dan bobot (CBK4BAB3, 3 SKS), semester 7 (reguler) atau 6 (MBKM/WRAP), pembimbing, kewajiban laporan | Kurikulum Prodi; Pedoman Akademik Tel-U 2024 Pasal 21 | **Syarat, alur, format laporan, jadwal**. Pedoman 2024 menyerahkan teknis KP ke fakultas/Prodi. |
+| MBKM dan WRAP | Slot MK MBKM (24 SKS), batas belajar di luar Prodi (20 SKS di dalam kampus, 40 SKS di luar kampus), WRAP (mulai semester 6, 10 sampai 20 SKS), MKMB | Kurikulum Prodi; Pedoman Akademik Tel-U 2024 Pasal 17, 18, 71, 72 | **Program MBKM/WRAP yang dibuka untuk TI Jakarta dan cara konversinya** |
+| Tugas Akhir dan kelulusan | Bentuk TA, kelompok, pembimbing, sidang, standar luaran dan publikasi, syarat lulus, EPrT per tingkat, predikat | Pedoman Akademik Tel-U 2024 dan PU.027/2024 | Pedoman dan template TA Prodi |
 | Innovillage | Gambaran program, kanal pendaftaran, pendanaan, jadwal edisi 2025 | innovillage.id, berita resmi | Alur dan pengakuan SKS untuk mahasiswa TI Jakarta |
-| Magang | Magang sebagai bentuk kegiatan MBKM, CDC Telkom University Jakarta | Panduan MBKM Tel-U 2024, situs kampus Jakarta | **Pedoman magang Prodi**, pengakuan SKS, daftar mitra |
+| Magang | Magang sebagai bentuk pembelajaran resmi, jalur WRAP Internship, RPL, kontak Karir & Alumni | Pedoman Akademik Tel-U 2024; FAQ kampus Jakarta | **Pedoman magang Prodi**, pengakuan SKS, daftar mitra |
 | Template | Belum ada | | **Semua template** yang boleh dipakai mahasiswa |
 
-Catatan: aturan akademik terbaru Telkom University adalah **Pedoman Akademik Telkom University 2024** (PU.022/AKD01/AKD-BPA/2024), beserta aturan peralihan dari Pedoman 2022 dan peraturan persyaratan kelulusan dan standar luaran Tugas Akhir. Mohon konfirmasi bahwa ketiganya berlaku untuk mahasiswa S1 Teknologi Informasi Telkom University Jakarta.
+Catatan: aturan akademik diambil dari **Pedoman Akademik Telkom University 2024** (PU.022/AKD01/AKD-BPA/2024), **Aturan Peralihan 2022 ke 2024** (PU.026/AKD03/AKD-BPA/2024), dan **Persyaratan Kelulusan dan Standar Luaran TA** (PU.027/AKD11/AKD-BPA/2024). PU.027 menyebut Kampus Jakarta sebagai bagian Telkom University, dan Pedoman 2024 berlaku penuh untuk angkatan 2024 ke atas. Mohon konfirmasi aturan yang dipakai untuk angkatan 2023 ke bawah.
 
 ## 8. Rencana tim setelah data diterima
 
