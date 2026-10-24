@@ -12,6 +12,8 @@ WELCOME = (
     "Halo! Aku Tanya Kampus, asisten Prodi S1 Teknologi Informasi Telkom University Jakarta.\n\n"
     "Aku bantu cari informasi seputar magang, Kerja Praktik (KP), MBKM, Innovillage, konversi TAK, "
     "template dokumen, dan tugas akhir dari dokumen resmi, lengkap dengan sumbernya.\n\n"
+    "Lagi ada kendala, misalnya soal pembayaran atau akun kampus? Ceritakan saja, nanti aku arahkan "
+    "ke kontak yang tepat.\n\n"
     "Cara pakai: ketik pertanyaanmu langsung di kolom chat, contoh: Apa syarat mendaftar Kerja Praktik?\n\n"
     "Jawaban hanya berdasarkan dokumen yang tersedia. Untuk hal yang menentukan (batas waktu, "
     "persyaratan), selalu cocokkan dengan Prodi.\n\n"

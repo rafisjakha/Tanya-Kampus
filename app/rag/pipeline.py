@@ -25,13 +25,18 @@ from .prompt import (
     NOT_FOUND_TOKEN,
     REWRITE_PROMPT,
     SYSTEM_PROMPT,
+    build_chat_prompt,
     build_prompt,
     build_rewrite_prompt,
 )
 from .search import Hit, Retriever
 from .textclean import clean_answer
 
-CHAT_MAX_WORDS = 30  # pesan lebih panjang langsung memakai pesan 'tidak ditemukan' baku (hemat kuota)
+# Pesan lebih panjang langsung memakai pesan 'tidak ditemukan' baku (hemat kuota). Cukup longgar supaya cerita
+# kendala yang panjang tetap sampai ke LLM dan diarahkan ke kontak yang tepat.
+CHAT_MAX_WORDS = 60
+DIRECTORY_CATEGORY = "kontak"  # dokumen kategori ini menjadi DIREKTORI KONTAK yang selalu dikirim ke LLM
+DIRECTORY_MAX_CHARS = 3000  # batas supaya direktori tidak menghabiskan token di setiap pertanyaan
 REWRITE_MAX_WORDS = 15  # pesan lebih panjang dianggap sudah berdiri sendiri (tanpa panggilan LLM tambahan)
 HISTORY_MAX_TURNS = 3
 HISTORY_MAX_CHARS = 300
@@ -98,12 +103,29 @@ class Pipeline:
         self.retriever = retriever
         self.llm = llm
         self.settings = settings
+        self._directory_cache: tuple[int, str] | None = None  # (index_version, isi direktori)
 
     # -- cache --------------------------------------------------------------------------------
 
-    def _cache_key(self, conn, question: str, category: str | None) -> str:
-        raw = f"{get_index_version(conn)}|{category or ''}|{normalize_question(question)}"
+    def _cache_key(self, version: int, question: str, category: str | None) -> str:
+        raw = f"{version}|{category or ''}|{normalize_question(question)}"
         return hashlib.sha1(raw.encode("utf-8")).hexdigest()
+
+    def _directory(self, conn, version: int) -> str:
+        """Isi dokumen kategori 'kontak' yang sudah di-index. Dibaca ulang hanya bila indeks berubah."""
+        cached = self._directory_cache
+        if cached and cached[0] == version:
+            return cached[1]
+        rows = conn.execute(
+            """
+            SELECT c.content FROM chunks c JOIN documents d ON d.id = c.doc_id
+            WHERE d.category = ? ORDER BY d.effective_date DESC, d.id, c.chunk_index
+            """,
+            (DIRECTORY_CATEGORY,),
+        ).fetchall()
+        text = "\n\n".join(r["content"] for r in rows)[:DIRECTORY_MAX_CHARS].strip()
+        self._directory_cache = (version, text)
+        return text
 
     def _cache_get(self, conn, key: str) -> dict | None:
         ttl = self.settings.cache_ttl_hours
@@ -167,14 +189,15 @@ class Pipeline:
             return question
         return text[: self.settings.max_question_chars]
 
-    def _llm_fallback(self, question: str, now_text: str | None, used: list[int]) -> tuple[str, str]:
-        """Balasan LLM saat dokumen tidak menjawab: ("answered", obrolan ringan) atau ("not_found", pesan ramah)."""
+    def _llm_fallback(self, question: str, now_text: str | None, directory: str,
+                      used: list[int]) -> tuple[str, str]:
+        """Balasan LLM saat dokumen tidak menjawab: ("answered", obrolan ringan) atau ("not_found", pesan ramah
+        yang mengarahkan ke kontak dari direktori bila relevan)."""
         if len(question.split()) > CHAT_MAX_WORDS:
             return "not_found", NOT_FOUND_MESSAGE
         used[0] += 1
         try:
-            prompt = f"WAKTU SEKARANG: {now_text}\n\nPESAN: {question}" if now_text else question
-            raw = self.llm.generate(CHAT_PROMPT, prompt).strip()
+            raw = self.llm.generate(CHAT_PROMPT, build_chat_prompt(question, now_text, directory)).strip()
         except LLMError:
             return "not_found", NOT_FOUND_MESSAGE
         if raw.startswith(NOT_FOUND_TOKEN):
@@ -228,8 +251,10 @@ class Pipeline:
         # 1. cache jawaban untuk pertanyaan yang sama pada versi indeks yang sama
         time_sensitive = bool(_TIME_SENSITIVE_RE.search(search_q))
         with db() as conn:
-            key = self._cache_key(conn, search_q, category)
+            version = get_index_version(conn)
+            key = self._cache_key(version, search_q, category)
             cached = None if time_sensitive else self._cache_get(conn, key)
+            directory = self._directory(conn, version)
         if cached:
             return finish("answered", cached["answer"], json.loads(cached["sources_json"]),
                           cached["top_score"], cached=True)
@@ -239,18 +264,18 @@ class Pipeline:
         debug_hits = [h.to_debug() for h in hits]
         top = hits[0].score if hits else None
         if not hits or top < self.settings.score_threshold:
-            status, text = self._llm_fallback(search_q, now_text, used)
+            status, text = self._llm_fallback(search_q, now_text, directory, used)
             return finish(status, text, top=top, hits=debug_hits)
 
         # 3. generate
         used[0] += 1
         try:
-            raw = self.llm.generate(SYSTEM_PROMPT, build_prompt(search_q, hits, now_text))
+            raw = self.llm.generate(SYSTEM_PROMPT, build_prompt(search_q, hits, now_text, directory))
         except LLMError as exc:
             return finish("error", ERROR_MESSAGE, top=top, error=str(exc), hits=debug_hits)
 
         if raw.strip().strip(".").upper() == NOT_FOUND_TOKEN or raw.strip().startswith(NOT_FOUND_TOKEN):
-            status, text = self._llm_fallback(search_q, now_text, used)
+            status, text = self._llm_fallback(search_q, now_text, directory, used)
             return finish(status, text, top=top, hits=debug_hits)
 
         raw = clean_answer(raw)

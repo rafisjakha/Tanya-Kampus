@@ -11,6 +11,7 @@ Proyek Teknologi Informasi 23-003. Versi ini (V1) berfokus pada sistem inti yang
 - **OCR**: PDF hasil scan, PDF campuran (sebagian halaman scan), dan gambar (PNG/JPG/TIFF/BMP) dibaca dengan Tesseract. Hasil OCR diberi catatan di panel admin supaya angka, tanggal, dan tabel diperiksa sebelum di-index.
 - **Deteksi duplikat**: file dengan isi yang sama dengan dokumen yang sudah ada ditolak (atau dilewati pada upload massal).
 - **File asli untuk mahasiswa** (opsional per dokumen): bila admin mencentang "Izinkan bot mengirim file asli", jawaban yang bersumber dari dokumen itu menampilkan tombol unduh (mis. template, formulir).
+- **Rujukan kontak**: dokumen berkategori `kontak` menjadi direktori yang selalu dikirim ke LLM. Kendala layanan (pembayaran, akun kampus) diarahkan ke hotline Tel-U Jakarta atau unit terkait, dan urusan akademik ke Kemahasiswaan, dengan kontak yang disalin persis dari direktori. Template: [docs/template-direktori-kontak.md](docs/template-direktori-kontak.md).
 - **Admin lewat Telegram** (opsional): admin yang terdaftar mengirim file ke bot, hasilnya menjadi draft untuk ditinjau di panel.
 - **Guardrail**: ambang skor retrieval, instruksi "hanya dari konteks" ke LLM, dan jawaban "tidak ditemukan" yang jelas. Pertanyaan yang tidak terjawab tercatat di log, jadi admin tahu knowledge apa yang kurang.
 - **Hybrid search**: embedding semantik + keyword (SQLite FTS5) + cakupan kata, dengan filter kategori.

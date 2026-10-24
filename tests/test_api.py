@@ -98,7 +98,7 @@ def test_obrolan_ringan_dijawab_llm_tanpa_sumber(client, indexed_doc, stub_llm):
 
 
 def test_pertanyaan_panjang_tidak_dianggap_obrolan(client, indexed_doc, stub_llm):
-    q = "Siapa pemenang piala dunia sepak bola terakhir " + "dan seterusnya " * 20
+    q = "Siapa pemenang piala dunia sepak bola terakhir " + "dan seterusnya " * 40  # > CHAT_MAX_WORDS
     r = client.post("/api/ask", headers={"X-API-Key": "bot-key-tes"}, json={"question": q})
     assert r.json()["status"] == "not_found"
     assert stub_llm.calls == 0
@@ -313,7 +313,7 @@ def test_log_mencatat_llm_yang_dipakai(client, auth, indexed_doc, stub_llm):
 
 def test_log_pertanyaan_kosong_tanpa_llm(client, auth, indexed_doc, stub_llm):
     stub_llm.reply = "TIDAK_DITEMUKAN"
-    long_q = "Siapa pemenang piala dunia sepak bola terakhir " + "dan seterusnya " * 20  # terlalu panjang untuk jalur obrolan
+    long_q = "Siapa pemenang piala dunia sepak bola terakhir " + "dan seterusnya " * 40  # > CHAT_MAX_WORDS
     client.post("/api/ask", headers={"X-API-Key": "bot-key-tes"}, json={"question": long_q})
     row = client.get("/api/logs", headers=auth).json()[0]
     assert row["status"] == "not_found" and row["llm"] is None  # pesan baku tanpa memanggil LLM

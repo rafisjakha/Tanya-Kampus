@@ -60,7 +60,7 @@ Ketentuan dokumen:
 | PIC Innovillage | Innovillage | | | |
 | PIC TAK | Konversi TAK | | | |
 
-Direktori ini akan dimasukkan sebagai satu dokumen di panel admin, jadi admin Prodi bisa memperbaruinya kapan saja tanpa mengubah kode.
+Direktori ini akan dimasukkan sebagai satu dokumen berkategori `kontak` di panel admin, jadi admin Prodi bisa memperbaruinya kapan saja tanpa mengubah kode. Format dan cara memasangnya ada di [template-direktori-kontak.md](template-direktori-kontak.md).
 
 ## 5. Data untuk mengetahui kebutuhan mahasiswa
 
