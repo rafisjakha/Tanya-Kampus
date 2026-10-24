@@ -12,7 +12,11 @@ from ..rag.chunker import chunk_markdown
 from ..rag.embeddings import Embedder
 from .converter import ConversionError, convert_file, url_to_markdown
 
-DEFAULT_CATEGORIES = ["akademik", "tugas_akhir", "administrasi", "umum"]
+# Kategori bawaan di panel admin, mengikuti scope rapat Kaprodi 23 Oktober 2026 (lihat docs/).
+# Kategori lain yang sudah dipakai dokumen lama tetap muncul di panel.
+DEFAULT_CATEGORIES = [
+    "magang", "kp", "mbkm", "innovillage", "tak", "template", "tugas_akhir", "layanan", "akademik", "umum",
+]
 _SAFE_RE = re.compile(r"[^A-Za-z0-9._-]+")
 
 

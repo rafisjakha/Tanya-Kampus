@@ -429,7 +429,7 @@
     addMode = mode;
     const form = $('#add-form');
     form.reset();
-    form.category.value = 'akademik';
+    form.category.value = 'umum';
     form.title.disabled = false;
     form.title.placeholder = '';
     showError('#add-error', '');

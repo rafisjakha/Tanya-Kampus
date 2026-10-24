@@ -9,12 +9,12 @@ from ..rag.textclean import clean_answer
 TELEGRAM_LIMIT = 4096
 
 WELCOME = (
-    "Halo! Aku Tanya Kampus.\n\n"
-    "Aku membantu mencari informasi akademik dan tugas akhir dari dokumen resmi kampus, "
-    "lengkap dengan sumbernya.\n\n"
-    "Cara pakai: ketik pertanyaanmu langsung di kolom chat, contoh: Bagaimana cara mengajukan cuti akademik?\n\n"
-    "Jawaban hanya berdasarkan dokumen yang tersedia. Untuk hal yang menentukan (jadwal, "
-    "batas waktu, persyaratan), selalu cocokkan dengan bagian akademik.\n\n"
+    "Halo! Aku Tanya Kampus, asisten Prodi S1 Teknologi Informasi Telkom University Jakarta.\n\n"
+    "Aku bantu cari informasi seputar magang, Kerja Praktik (KP), MBKM, Innovillage, konversi TAK, "
+    "template dokumen, dan tugas akhir dari dokumen resmi, lengkap dengan sumbernya.\n\n"
+    "Cara pakai: ketik pertanyaanmu langsung di kolom chat, contoh: Apa syarat mendaftar Kerja Praktik?\n\n"
+    "Jawaban hanya berdasarkan dokumen yang tersedia. Untuk hal yang menentukan (batas waktu, "
+    "persyaratan), selalu cocokkan dengan Prodi.\n\n"
     "Privasi: pertanyaanmu dicatat bersama ID Telegram untuk memperbaiki layanan."
 )
 
@@ -22,7 +22,7 @@ HELP = (
     "Perintah:\n"
     "/menu : tampilkan tombol menu\n"
     "/about : tentang Tanya Kampus dan tim pengembang\n"
-    "/tanya <pertanyaan> : tanya informasi akademik atau tugas akhir\n"
+    "/tanya <pertanyaan> : tanya soal magang, KP, MBKM, TAK, dan lainnya\n"
     "/help : bantuan ini\n\n"
     "Di chat pribadi, kamu bisa langsung mengetik pertanyaan tanpa perintah."
 )
@@ -31,15 +31,20 @@ MENU_TEXT = "Pilih menu di bawah, atau langsung ketik pertanyaanmu."
 
 TANYA_TEXT = (
     "Ketik pertanyaanmu langsung di kolom chat.\n\n"
-    "Contoh: Apa saja syarat sidang tugas akhir?"
+    "Contoh:\n"
+    "- Apa syarat mendaftar Kerja Praktik?\n"
+    "- Bagaimana cara konversi magang ke SKS?\n"
+    "- Kegiatan apa saja yang bisa dapat poin TAK?\n"
+    "- Ada template laporan KP?"
 )
 
 ABOUT = (
     "Tentang Tanya Kampus\n\n"
     "Tanya Kampus adalah chatbot Telegram berbasis RAG (Retrieval-Augmented Generation) yang membantu mahasiswa "
-    "mendapatkan jawaban atas pertanyaan akademik dan tugas akhir/skripsi dengan cepat. Jawabannya hanya berdasarkan "
-    "dokumen resmi Prodi Teknologi Informasi yang sudah dipublikasikan, lengkap dengan sumbernya.\n\n"
-    "Kenapa dibuat? Buku panduan akademik, SOP administratif, dan pedoman tugas akhir tersebar di berbagai kanal "
+    "mendapatkan jawaban seputar magang, Kerja Praktik, MBKM, Innovillage, konversi TAK, template dokumen, dan "
+    "tugas akhir dengan cepat. Jawabannya hanya berdasarkan dokumen resmi Prodi Teknologi Informasi yang sudah "
+    "dipublikasikan, lengkap dengan sumbernya.\n\n"
+    "Kenapa dibuat? Pedoman magang, KP, MBKM, TAK, tugas akhir, dan berbagai template dokumen tersebar di berbagai kanal "
     "dan direvisi tiap tahun ajaran, sehingga informasi di grup percakapan sering simpang siur atau sudah tidak "
     "berlaku. Tanya Kampus menjadi kanal tanya-jawab otomatis yang konsisten, sekaligus mengurangi beban staf Prodi "
     "yang harus menjawab pertanyaan serupa berulang kali.\n\n"
@@ -68,9 +73,9 @@ def session_expired_text(timeout: float) -> str:
 
 SESSION_NEEDED = "Sesi belum dimulai atau sudah berakhir. Tekan Mulai di bawah atau kirim /start untuk memulai."
 
-TEXT_ONLY = "Aku hanya bisa membaca pesan teks. Ketik pertanyaanmu ya, contoh: Apa syarat sidang tugas akhir?"
+TEXT_ONLY = "Aku hanya bisa membaca pesan teks. Ketik pertanyaanmu ya, contoh: Apa syarat mendaftar Kerja Praktik?"
 DOWNLOAD_FAILED = "Maaf, file tidak bisa dikirim saat ini. Silakan ambil dari sumber resmi kampus."
-NO_QUESTION = "Tulis pertanyaannya setelah perintah, contoh:\n/tanya Apa saja syarat sidang tugas akhir?"
+NO_QUESTION = "Tulis pertanyaannya setelah perintah, contoh:\n/tanya Apa syarat mendaftar Kerja Praktik?"
 BUSY = "Tunggu sebentar sebelum bertanya lagi."
 STARTING = "Sedang diproses, tunggu sebentar ya."
 START_LABEL = "Mulai"

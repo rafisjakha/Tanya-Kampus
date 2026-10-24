@@ -1,6 +1,6 @@
 # Tanya Kampus
 
-Chatbot Telegram berbasis RAG + LLM untuk informasi akademik dan tugas akhir. Mahasiswa bertanya, sistem mencari bagian dokumen resmi yang relevan, LLM (Groq atau Gemini) menyusun jawaban dari bagian itu, dan jawaban selalu disertai sumbernya. Admin mengelola knowledge lewat panel web.
+Chatbot Telegram berbasis RAG + LLM untuk mahasiswa Prodi S1 Teknologi Informasi Telkom University Jakarta, berfokus pada magang, Kerja Praktik, MBKM, Innovillage, konversi TAK, template dokumen, dan tugas akhir. Scope dan kebutuhan data dijelaskan di [docs/scope-dan-kebutuhan-data-prodi.md](docs/scope-dan-kebutuhan-data-prodi.md). Mahasiswa bertanya, sistem mencari bagian dokumen resmi yang relevan, LLM (Groq atau Gemini) menyusun jawaban dari bagian itu, dan jawaban selalu disertai sumbernya. Admin mengelola knowledge lewat panel web.
 
 Proyek Teknologi Informasi 23-003. Versi ini (V1) berfokus pada sistem inti yang bisa didemokan. Deployment sengaja ditunda.
 

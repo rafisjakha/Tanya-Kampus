@@ -445,7 +445,7 @@ async def _post_init(app: Application):
     await app.bot.set_my_commands([
         ("start", "Mulai dan cara pakai"),
         ("menu", "Tampilkan tombol menu"),
-        ("tanya", "Tanya informasi akademik atau tugas akhir"),
+        ("tanya", "Tanya soal magang, KP, MBKM, TAK, dan lainnya"),
         ("about", "Tentang Tanya Kampus dan tim pengembang"),
         ("help", "Bantuan"),
     ])
