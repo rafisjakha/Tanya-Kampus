@@ -103,8 +103,9 @@ python -c "import secrets; print(secrets.token_hex(32))"   # tempel hasilnya ke 
 # 3. Cek kesiapan (menunjukkan persis apa yang masih kurang)
 python -m scripts.doctor
 
-# 4. Muat dokumen contoh (opsional, untuk demo cepat)
-python -m scripts.seed_demo
+# 4. Muat dokumen (opsional, untuk demo cepat)
+python -m scripts.seed_demo --knowledge   # dari sumber resmi publik (data/knowledge), perlu diverifikasi Prodi
+python -m scripts.seed_demo               # contoh fiktif (data/sample)
 
 # 5. Jalankan API + panel admin
 uvicorn app.main:app --reload --port 8001

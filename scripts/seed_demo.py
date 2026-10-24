@@ -1,11 +1,13 @@
-"""Muat dokumen contoh (data/sample/*.md) dan index, supaya demo bisa langsung dicoba.
+"""Muat dokumen dan index, supaya bot bisa langsung dicoba.
 
-    python -m scripts.seed_demo
+    python -m scripts.seed_demo               # dokumen contoh fiktif (data/sample)
+    python -m scripts.seed_demo --knowledge   # dokumen dari sumber resmi publik (data/knowledge)
 
 Aman dijalankan berulang: dokumen dengan judul yang sama dilewati.
 """
 from __future__ import annotations
 
+import argparse
 import sys
 
 from app.config import BASE_DIR, get_settings
@@ -14,22 +16,49 @@ from app.ingestion import service
 from app.rag.embeddings import build_embedder
 
 SAMPLE_DIR = BASE_DIR / "data" / "sample"
+KNOWLEDGE_DIR = BASE_DIR / "data" / "knowledge"
 
-# nama file -> (judul, kategori, tanggal berlaku)
+# nama file -> (judul, kategori, tanggal berlaku, URL sumber)
 SAMPLES = {
-    "panduan-akademik-contoh.md": ("Panduan Akademik (CONTOH)", "akademik", "2026-01-01"),
-    "panduan-tugas-akhir-contoh.md": ("Panduan Tugas Akhir (CONTOH)", "tugas_akhir", "2026-02-01"),
+    "panduan-akademik-contoh.md": ("Panduan Akademik (CONTOH)", "akademik", "2026-01-01", None),
+    "panduan-tugas-akhir-contoh.md": ("Panduan Tugas Akhir (CONTOH)", "tugas_akhir", "2026-02-01", None),
+}
+
+# Disusun dari sumber resmi publik, diakses 24 Oktober 2026. Rincian sumber ada di bagian akhir tiap file.
+KNOWLEDGE = {
+    "direktori-kontak-tel-u-jakarta.md": (
+        "Direktori Kontak Layanan Telkom University Jakarta", "kontak", "2026-10-24",
+        "https://jakarta.telkomuniversity.ac.id/",
+    ),
+    "pedoman-tak-telkom-university.md": (
+        "Pedoman TAK Telkom University", "tak", "2022-08-02",
+        "https://bolif.telkomuniversity.ac.id/wp-content/uploads/2023/06/SK-TAK-2022.pdf",
+    ),
+    "kerja-praktik-s1-ti-jakarta.md": (
+        "Kerja Praktik dan Tugas Akhir S1 Teknologi Informasi Jakarta", "kp", "2026-10-24",
+        "https://bit-jkt.telkomuniversity.ac.id/kurikulum-reguler/",
+    ),
+    "mbkm-s1-ti-jakarta.md": (
+        "MBKM S1 Teknologi Informasi Jakarta", "mbkm", "2026-10-24",
+        "https://bit-jkt.telkomuniversity.ac.id/kurikulum-mbkm-wrap/",
+    ),
+    "innovillage.md": ("Innovillage", "innovillage", "2026-10-24", "https://innovillage.id/"),
 }
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--knowledge", action="store_true", help="muat dokumen dari sumber resmi (data/knowledge)")
+    args = ap.parse_args(argv)
+    folder, docs = (KNOWLEDGE_DIR, KNOWLEDGE) if args.knowledge else (SAMPLE_DIR, SAMPLES)
+
     settings = get_settings()
     init_db()
     embedder = build_embedder(settings)
     print(f"Embedding: {embedder.name} (unduhan model pertama kali bisa beberapa menit)")
 
-    for filename, (title, category, date) in SAMPLES.items():
-        path = SAMPLE_DIR / filename
+    for filename, (title, category, date, url) in docs.items():
+        path = folder / filename
         if not path.exists():
             print(f"- lewati {filename}: file tidak ada")
             continue
@@ -39,7 +68,7 @@ def main() -> int:
                 continue
         doc_id = service.create_manual(
             title=title, markdown=path.read_text(encoding="utf-8"), category=category,
-            effective_date=date, source_url=None, created_by="seed",
+            effective_date=date, source_url=url, created_by="seed",
         )
         doc = service.index_document(doc_id, embedder, settings)
         print(f"- '{title}': {doc['chunk_count']} chunk")

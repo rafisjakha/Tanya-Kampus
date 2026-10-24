@@ -51,7 +51,7 @@ ABOUT = (
     "berlaku. Tanya Kampus menjadi kanal tanya-jawab otomatis yang konsisten, sekaligus mengurangi beban staf Prodi "
     "yang harus menjawab pertanyaan serupa berulang kali.\n\n"
     "Mitra: Program Studi S1 Teknologi Informasi, Universitas Telkom Jakarta "
-    "(Kaprodi: Hartanto Suryoprayogo, S.Kom., M.Kom.)\n\n"
+    "(Kaprodi: Hertanto Suryoprayogo, S.Kom., M.Kom.)\n\n"
     "Tim pengembang (Kelompok TK, Mata Kuliah Proyek TI):\n"
     "- Muhammad Raihan Fadani (Project Manager)\n"
     "- Muhammad Raia Pratama Putra Wibowo\n"

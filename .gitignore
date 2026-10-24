@@ -8,6 +8,7 @@ __pycache__/
 # data lokal: database, file asli. Dokumen contoh di data/sample tetap ikut repo.
 data/*
 !data/sample/
+!data/knowledge/
 !data/.gitkeep
 *.db
 *.db-wal

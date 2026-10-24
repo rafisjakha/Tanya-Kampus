@@ -18,7 +18,7 @@ def _seed(env):
 
     init_db()
     emb = HashingEmbedder()
-    for filename, (title, category, date) in SAMPLES.items():
+    for filename, (title, category, date, _url) in SAMPLES.items():
         doc_id = service.create_manual(
             title=title, markdown=(SAMPLE_DIR / filename).read_text(encoding="utf-8"), category=category,
             effective_date=date, source_url=None, created_by="tes",

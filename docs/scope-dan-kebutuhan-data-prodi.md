@@ -77,7 +77,24 @@ Direktori ini akan dimasukkan sebagai satu dokumen berkategori `kontak` di panel
 5. Bila dokumen datang bertahap, **topik mana yang didahulukan**?
 6. Fitur pembacaan jadwal kuliah yang sudah ada: **dipertahankan** sebagai fitur tambahan atau **dinonaktifkan**?
 
-## 7. Rencana tim setelah data diterima
+## 7. Data yang sudah dikumpulkan tim dari sumber publik
+
+Tim sudah menyusun dokumen awal dari situs resmi (diakses 24 Oktober 2026), ada di folder `data/knowledge/`. Mohon Prodi **memeriksa kebenarannya** dan melengkapi yang masih kosong.
+
+| Topik | Yang sudah ada | Sumber | Yang masih dibutuhkan dari Prodi |
+|---|---|---|---|
+| Kontak | Hotline Direktorat Kampus Jakarta, IT Service Desk (WhatsApp dan tiket SITU), Suara TelUtizen, Satgas PPKPT, formulir keluhan fasilitas | jakarta.telkomuniversity.ac.id, servicedesk.telkomuniversity.ac.id | Kontak **LAAK/Kemahasiswaan Jakarta**, **Keuangan**, admin Prodi, koordinator KP/magang, PIC MBKM |
+| TAK | Nilai minimal (S1: 60), kegiatan wajib, tabel poin, cara dan batas pelaporan | Peraturan Rektor KR.362/MHS6/KMH-KKM/2022 | Konfirmasi bahwa aturan dan sistem pelaporannya sama untuk kampus Jakarta |
+| Kerja Praktik | Kode dan bobot (CBK4BAB3, 3 SKS), semester 7 (reguler) atau 6 (MBKM/WRAP) | Kurikulum di bit-jkt.telkomuniversity.ac.id | **Syarat, alur pendaftaran, format laporan, penilaian** |
+| MBKM | Slot MK MBKM I sampai VIII (24 SKS) di semester 7 dan 8 jalur MBKM/WRAP | Kurikulum di bit-jkt.telkomuniversity.ac.id | **Program yang diakui, syarat, cara konversi nilai**. Panduan MBKM Tel-U 2024 sudah tidak bisa diakses. |
+| Tugas Akhir | Bobot 4 SKS di semester 8, didahului Penulisan Proposal | Kurikulum Prodi | Pedoman TA Prodi |
+| Innovillage | Gambaran program, kanal pendaftaran, pendanaan, jadwal edisi 2025 | innovillage.id, berita resmi | Alur dan pengakuan SKS untuk mahasiswa TI Jakarta |
+| Magang | Belum ada sumber resmi khusus Jakarta | | **Pedoman magang Prodi** |
+| Template | Belum ada | | **Semua template** yang boleh dipakai mahasiswa |
+
+Catatan: situs kampus Jakarta menautkan "Pedoman Akademik ITTJ 2022" dan "Pedoman Kemahasiswaan 2022". Mohon konfirmasi apakah keduanya masih berlaku setelah penggabungan ke Telkom University.
+
+## 8. Rencana tim setelah data diterima
 
 1. Menyesuaikan fokus bot ke topik di atas: kategori dokumen, teks sambutan, dan gaya jawaban.
 2. Menambahkan direktori kontak rujukan, sehingga kendala dan pertanyaan akademik diarahkan ke unit yang tepat.
