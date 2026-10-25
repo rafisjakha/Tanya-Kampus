@@ -11,7 +11,7 @@
 
 ## Keuangan
 - Keuangan menangani: pembayaran belum terverifikasi, tagihan BPP, virtual account, cara bayar kuliah
-- Kontak: portal Situ Keu; WhatsApp (chat saja) +62 812 2142 4646 atau +62 811 1012 6353; email finance@telkomuniversity.ac.id
+- Kontak: portal Situ Keu; hotline WhatsApp +62 811 368 393; email finance@telkomuniversity.ac.id
 
 ## Layanan IT
 - Layanan IT (IT Service Desk) menangani: lupa password, akun terkunci, email kampus, SSO, MFA, LMS/CeLOE
