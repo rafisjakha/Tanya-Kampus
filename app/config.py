@@ -164,7 +164,7 @@ class Settings:
             api_base_url=(_get("API_BASE_URL", "http://127.0.0.1:8001") or "").rstrip("/"),
             admin_telegram_ids=_get_id_set("ADMIN_TELEGRAM_IDS"),
             bot_cooldown_seconds=_get_float("BOT_COOLDOWN_SECONDS", 3.0),
-            session_timeout_seconds=_get_float("SESSION_TIMEOUT_SECONDS", 60.0),
+            session_timeout_seconds=_get_float("SESSION_TIMEOUT_SECONDS", 180.0),
             timezone=_get("TIMEZONE") or "Asia/Jakarta",
         )
 

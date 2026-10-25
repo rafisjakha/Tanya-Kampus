@@ -14,10 +14,12 @@ _CODE_RE = re.compile(r"`([^`\n]+)`")
 _HEADING_RE = re.compile(r"^[ \t]{0,3}#{1,6}[ \t]+", re.M)
 _STAR_BULLET_RE = re.compile(r"^([ \t]*)[*+][ \t]+", re.M)
 _TRAILING_RE = re.compile(r"[ \t]+$", re.M)
+_FULLWIDTH_CITE_RE = re.compile(r"[【［](\d+)[】］]")  # sitasi gaya Cina/Jepang: 【1】 -> [1]
 
 
 def clean_answer(text: str) -> str:
     text = text.translate(_HYPHENS)
+    text = _FULLWIDTH_CITE_RE.sub(r"[\1]", text)
     text = _BOLD_RE.sub(r"\2", text)
     text = _CODE_RE.sub(r"\1", text)
     text = _HEADING_RE.sub("", text)

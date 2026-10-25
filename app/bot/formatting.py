@@ -1,6 +1,7 @@
 """Fungsi murni untuk bot (tanpa dependensi Telegram) supaya mudah dites."""
 from __future__ import annotations
 
+import html
 import re
 import time
 
@@ -94,8 +95,38 @@ _CITATION_RE = re.compile(r"[ \t]*(?:\[\d+\])+")
 
 def format_answer(result: dict) -> str:
     """Teks jawaban untuk Telegram. Penanda sumber [1] dibuang karena daftar sumber tidak ditampilkan."""
-    text = clean_answer(_CITATION_RE.sub("", result["answer"]))
+    text = _CITATION_RE.sub("", clean_answer(result["answer"]))
     return re.sub(r"[ \t]+([.,;:!?])", r"\1", text).strip()
+
+
+# Nomor telepon Indonesia: +62 811-9780-0200, 0811 9780 0200, 62811..., (021) 545 1597, 021-5451697.
+# Jam ("08.30"), kode kelas ("S1IT-KJ-23-003"), tahun, dan angka biasa sengaja tidak cocok.
+_PHONE_RE = re.compile(r"(?<![\w/=@.])\(?(?:\+62|62|0)[\s.\-]?\(?\d{2,4}\)?[\s.\-]?\d{3,4}[\s.\-]?\d{3,5}(?![\w@])")
+
+
+def wa_number(raw: str) -> str | None:
+    """Nomor dalam format wa.me (hanya angka, kode negara 62), atau None bila bukan nomor telepon yang wajar."""
+    digits = re.sub(r"\D", "", raw)
+    if digits.startswith("0"):
+        digits = "62" + digits[1:]
+    return digits if digits.startswith("62") and 10 <= len(digits) <= 15 else None
+
+
+def linkify_phones(text: str) -> str:
+    """Ubah teks jawaban menjadi HTML Telegram: tiap nomor telepon menjadi tautan https://wa.me/<nomor>.
+
+    Nomor tetap tampil seperti aslinya dan bisa diketuk. Semua teks lain di-escape supaya aman dikirim dengan
+    parse_mode=HTML."""
+    out, pos = [], 0
+    for m in _PHONE_RE.finditer(text):
+        number = wa_number(m.group())
+        if not number:
+            continue
+        out.append(html.escape(text[pos:m.start()], quote=False))
+        out.append(f'<a href="https://wa.me/{number}">{html.escape(m.group(), quote=False)}</a>')
+        pos = m.end()
+    out.append(html.escape(text[pos:], quote=False))
+    return "".join(out)
 
 
 def split_message(text: str, limit: int = TELEGRAM_LIMIT) -> list[str]:

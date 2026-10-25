@@ -27,9 +27,10 @@ SAMPLES = {
 # Disusun dari sumber resmi publik, diakses 24 Oktober 2026. Rincian sumber ada di bagian akhir tiap file.
 KNOWLEDGE = {
     "direktori-kontak-tel-u-jakarta.md": (
-        "Direktori Kontak Layanan Telkom University Jakarta", "kontak", "2026-10-24",
+        "Direktori Kontak Layanan Telkom University Jakarta", "kontak", "2026-10-25",
         "https://jakarta.telkomuniversity.ac.id/",
     ),
+    "kalender-akademik-telkom-university.md": ("Kalender Akademik", "akademik", "2026-06-04", None),
     "pedoman-tak-telkom-university.md": (
         "Pedoman TAK Telkom University", "tak", "2022-08-02",
         "https://bolif.telkomuniversity.ac.id/wp-content/uploads/2023/06/SK-TAK-2022.pdf",

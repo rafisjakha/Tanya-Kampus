@@ -1,4 +1,4 @@
-from app.bot.formatting import Cooldown, format_answer, split_message
+from app.bot.formatting import Cooldown, format_answer, linkify_phones, split_message, wa_number
 
 
 def test_format_answer_tanpa_daftar_sumber_dan_tanpa_penanda():
@@ -38,3 +38,36 @@ def test_cooldown():
     assert cd.allow(2)  # pengguna lain tidak terpengaruh
     now[0] += 3.1
     assert cd.allow(1)
+
+
+def test_nomor_telepon_jadi_tautan_wa_me():
+    html = linkify_phones("Hubungi +62 811-9780-0200 atau 081197800200.")
+    assert '<a href="https://wa.me/6281197800200">+62 811-9780-0200</a>' in html
+    assert '<a href="https://wa.me/6281197800200">081197800200</a>' in html
+
+
+def test_telepon_rumah_dan_format_62_juga_diubah():
+    assert 'href="https://wa.me/62215451597">(021) 545 1597</a>' in linkify_phones("Telp (021) 545 1597.")
+    assert 'href="https://wa.me/62215451697">021-5451697</a>' in linkify_phones("Fax 021-5451697")
+    assert 'href="https://wa.me/6281197800200">6281197800200</a>' in linkify_phones("WA 6281197800200")
+
+
+def test_jam_kode_kelas_tahun_dan_angka_biasa_tidak_diubah():
+    text = "Jumat 08.30-10.30, kelas S1IT-KJ-23-003, tahun 2026, IPK 2,50, 110 SKS, skor 0.580, 06.30 sampai 08.30"
+    assert "wa.me" not in linkify_phones(text)
+    assert linkify_phones(text) == text
+
+
+def test_teks_lain_di_escape_untuk_html():
+    assert linkify_phones("A & B < C > D") == "A &amp; B &lt; C &gt; D"
+    html = linkify_phones("Kontak <b>0811 9780 0200</b>")
+    assert "&lt;b&gt;" in html and 'href="https://wa.me/6281197800200"' in html
+
+
+def test_url_wa_me_yang_sudah_ada_tidak_digandakan():
+    assert linkify_phones("https://wa.me/6281197800200") == "https://wa.me/6281197800200"
+
+
+def test_wa_number_menolak_yang_tidak_wajar():
+    assert wa_number("0811-9780-0200") == "6281197800200"
+    assert wa_number("123") is None and wa_number("0123456789012345678") is None

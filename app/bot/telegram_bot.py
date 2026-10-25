@@ -19,7 +19,7 @@ from telegram import (
     ReplyKeyboardRemove,
     Update,
 )
-from telegram.constants import ChatAction, ChatType
+from telegram.constants import ChatAction, ChatType, ParseMode
 from telegram.error import BadRequest
 from telegram.ext import (
     Application,
@@ -51,6 +51,7 @@ from .formatting import (
     Cooldown,
     format_answer,
     is_start_text,
+    linkify_phones,
     session_expired_text,
     split_message,
 )
@@ -302,7 +303,12 @@ async def _answer(update: Update, context: ContextTypes.DEFAULT_TYPE, question: 
     keyboard = build_keyboard(result)
     for i, part in enumerate(parts):
         last = i == len(parts) - 1
-        await message.reply_text(part, reply_markup=keyboard if last else None, disable_web_page_preview=True)
+        markup = keyboard if last else None
+        try:  # nomor telepon dijadikan tautan wa.me
+            await message.reply_text(linkify_phones(part), reply_markup=markup, parse_mode=ParseMode.HTML,
+                                     disable_web_page_preview=True)
+        except BadRequest:  # Telegram menolak markup-nya: kirim sebagai teks biasa
+            await message.reply_text(part, reply_markup=markup, disable_web_page_preview=True)
 
 
 def build_keyboard(result: dict) -> InlineKeyboardMarkup | None:

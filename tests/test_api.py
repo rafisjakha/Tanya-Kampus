@@ -326,3 +326,20 @@ def test_pulse_butuh_login_dan_berubah_saat_data_berubah(client, auth, indexed_d
     client.post("/api/ask", headers={"X-API-Key": "bot-key-tes"}, json={"question": "Kapan batas pengajuan cuti akademik?"})
     after = client.get("/api/pulse", headers=auth).json()
     assert after["logs"] != before["logs"] and after["docs"] == before["docs"]
+
+
+def test_tanpa_sitasi_sumber_yang_jauh_dari_yang_terbaik_tidak_ikut():
+    """Dulu tiga hit teratas selalu dijadikan sumber (dan tombol Unduh) walau skornya jauh lebih rendah."""
+    from app.rag.pipeline import _cited_sources
+    from app.rag.search import Hit
+
+    def hit(i, score):
+        return Hit(chunk_id=i, doc_id=i, doc_title=f"Dok {i}", category="umum", heading_path=f"Dok {i} > Bagian",
+                   content="x", effective_date=None, source_url=None, semantic=score, lexical=0.0, score=score,
+                   downloadable=True)
+
+    hits = [hit(1, 0.84), hit(2, 0.50), hit(3, 0.49)]
+    assert [s["doc_id"] for s in _cited_sources("Jawaban tanpa nomor.", hits)] == [1]
+    close = [hit(1, 0.84), hit(2, 0.80), hit(3, 0.49)]
+    assert [s["doc_id"] for s in _cited_sources("Jawaban tanpa nomor.", close)] == [1, 2]
+    assert [s["doc_id"] for s in _cited_sources("Jawaban [3].", hits)] == [3]  # sitasi eksplisit tetap dihormati

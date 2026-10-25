@@ -37,6 +37,7 @@ from .textclean import clean_answer
 CHAT_MAX_WORDS = 60
 DIRECTORY_CATEGORY = "kontak"  # dokumen kategori ini menjadi DIREKTORI KONTAK yang selalu dikirim ke LLM
 DIRECTORY_MAX_CHARS = 3000  # batas supaya direktori tidak menghabiskan token di setiap pertanyaan
+FALLBACK_SOURCE_RATIO = 0.9  # tanpa sitasi dari LLM: sumber tambahan harus sedekat 90% dari skor sumber terbaik
 REWRITE_MAX_WORDS = 15  # pesan lebih panjang dianggap sudah berdiri sendiri (tanpa panggilan LLM tambahan)
 HISTORY_MAX_TURNS = 3
 HISTORY_MAX_CHARS = 300
@@ -93,8 +94,12 @@ def _source_dict(n: int, h: Hit) -> dict:
 
 def _cited_sources(answer: str, hits: list[Hit]) -> list[dict]:
     cited = sorted({int(n) for n in _CITATION_RE.findall(answer) if 1 <= int(n) <= len(hits)})
-    if not cited:  # LLM lupa mencantumkan nomor: tampilkan tiga teratas
-        cited = list(range(1, min(3, len(hits)) + 1))
+    if not cited:
+        # LLM lupa mencantumkan nomor: ambil sumber yang benar-benar dekat dengan yang terbaik (maks. tiga), bukan
+        # tiga teratas begitu saja. Hit di bawah ambang kemiripan tidak boleh ikut, karena dari sumber inilah
+        # tombol "Unduh" dan daftar sumber dibuat.
+        top = hits[0].score
+        cited = [i for i, h in enumerate(hits[:3], 1) if i == 1 or h.score >= FALLBACK_SOURCE_RATIO * top]
     return [_source_dict(n, hits[n - 1]) for n in cited]
 
 

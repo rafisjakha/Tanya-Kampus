@@ -527,3 +527,26 @@ def test_keyboard_mulai_dihapus_saat_pengguna_mengetik_start():
 def test_pemberitahuan_sesi_berakhir_memakai_tombol_mulai():
     from app.bot.formatting import session_expired_text
     assert "Mulai" in session_expired_text(60)
+
+
+def test_nomor_telepon_di_jawaban_jadi_tautan_wa_me():
+    result = {**ANSWER, "answer": "Hubungi bagian akademik di (021) 545 1597 atau 0811-9780-0200 ya [1]."}
+    upd, ctx = make_update(), make_context(FakeApi(result))
+    run(bot.on_text(upd, ctx))
+    args, kwargs = upd.message.reply_text.call_args
+    assert kwargs["parse_mode"] == "HTML"
+    assert '<a href="https://wa.me/62215451597">(021) 545 1597</a>' in args[0]
+    assert '<a href="https://wa.me/6281197800200">0811-9780-0200</a>' in args[0]
+    assert "[1]" not in args[0]
+
+
+def test_bila_telegram_menolak_markup_dikirim_ulang_sebagai_teks_biasa():
+    from telegram.error import BadRequest
+
+    result = {**ANSWER, "answer": "Hubungi 0811-9780-0200 ya."}
+    upd, ctx = make_update(), make_context(FakeApi(result))
+    upd.message.reply_text = AsyncMock(side_effect=[BadRequest("Can't parse entities"), None])
+    run(bot.on_text(upd, ctx))
+    assert upd.message.reply_text.await_count == 2
+    second = upd.message.reply_text.await_args_list[1]
+    assert "parse_mode" not in second.kwargs and second.args[0] == "Hubungi 0811-9780-0200 ya."

@@ -22,3 +22,9 @@ def test_jawaban_contoh_dari_bot():
     text = format_answer({"status": "answered", "answer": raw, "sources": []})
     assert "**" not in text and "[1]" not in text and "‑" not in text
     assert "- Jumat, 08.30-10.30 – Kuliah PROYEK TI" in text
+
+
+def test_sitasi_penuh_lebar_dibersihkan_juga():
+    assert clean_answer("Nomornya +62 811 9780 0200【1】.") == "Nomornya +62 811 9780 0200[1]."
+    text = format_answer({"status": "answered", "answer": "Hubungi admin prodi【1】 ya.", "sources": []})
+    assert "【" not in text and "[1]" not in text and text == "Hubungi admin prodi ya."

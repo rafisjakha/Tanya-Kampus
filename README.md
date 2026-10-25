@@ -124,7 +124,7 @@ Login dengan `ADMIN_USERNAME` dan `ADMIN_PASSWORD` dari `.env`. Admin dibuat oto
 3. Di terminal lain: `python -m app.bot.telegram_bot`. Saat mengembangkan, pakai `python -m scripts.dev_bot` supaya bot otomatis dimulai ulang tiap file `.py` di `app/` atau `.env` berubah (Ctrl+C untuk berhenti).
 4. Buka bot di Telegram, kirim `/start`. Akan muncul tombol menu (Tanya, Bantuan, Tentang Kami; di tampilan Bantuan tombolnya berganti jadi perintah), atau langsung ketik pertanyaanmu. Menu juga bisa dipanggil lewat `/menu`, dan info tim lewat `/about`.
 
-Sesi percakapan berakhir otomatis bila pengguna diam 1 menit (`SESSION_TIMEOUT_SECONDS`, 0 = nonaktif); bot memberi tahu dan pengguna menekan **Mulai lagi** atau `/start`. Pesan lanjutan seperti "kalo hari kamis?" dilengkapi dari riwayat chat (di sesi yang sama) lewat satu panggilan LLM tambahan. Sapaan dan obrolan ringan dijawab LLM (tanpa sumber), bot menolak pesan non-teks dengan ramah, dan membatasi frekuensi tanya per pengguna (`BOT_COOLDOWN_SECONDS`).
+Sesi percakapan berakhir otomatis bila pengguna diam 3 menit (`SESSION_TIMEOUT_SECONDS`, 0 = nonaktif); bot memberi tahu dan pengguna menekan tombol **Mulai** di bawah kolom ketik atau mengirim `/start`. Pesan lanjutan seperti "kalo hari kamis?" dilengkapi dari riwayat chat (di sesi yang sama) lewat satu panggilan LLM tambahan. Sapaan dan obrolan ringan dijawab LLM (tanpa sumber), bot menolak pesan non-teks dengan ramah, dan membatasi frekuensi tanya per pengguna (`BOT_COOLDOWN_SECONDS`).
 
 Untuk fitur kirim file sebagai admin: kirim `/id` ke bot, masukkan angkanya ke `ADMIN_TELEGRAM_IDS`, restart bot. File yang dikirim menjadi **draft**; tinjau dan klik Index di panel admin. Judul diambil dari caption file.
 
@@ -191,7 +191,7 @@ Semua lewat `.env` (lihat `.env.example`). Yang paling relevan:
 | `BOT_API_KEY` | | Kunci bersama bot dan API. Bila kosong, `/api/ask` terbuka. |
 | `TELEGRAM_TOKEN`, `ADMIN_TELEGRAM_IDS` | | Untuk bot. |
 | `BOT_COOLDOWN_SECONDS` | `3` | Jeda minimal antarpertanyaan per pengguna. |
-| `SESSION_TIMEOUT_SECONDS` | `60` | Sesi bot berakhir bila pengguna diam sekian detik. `0` = tanpa batas waktu. |
+| `SESSION_TIMEOUT_SECONDS` | `180` | Sesi bot berakhir bila pengguna diam sekian detik. `0` = tanpa batas waktu. |
 | `TIMEZONE` | `Asia/Jakarta` | Dipakai untuk "hari ini", "besok", "sekarang" pada pertanyaan jadwal. |
 | `CACHE_TTL_HOURS` | `24` | Lama jawaban yang sama diambil dari cache. `0` = tanpa cache. |
 | `OCR_ENABLED` | `true` | Matikan bila tidak butuh OCR. |

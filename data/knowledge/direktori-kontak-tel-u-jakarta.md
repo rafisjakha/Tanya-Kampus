@@ -1,47 +1,48 @@
 # Direktori Kontak Layanan Telkom University Jakarta
 
+## Hotline Tel-U Jakarta
+- Hotline Direktorat Kampus Jakarta menangani: kendala umum, informasi umum, dan yang belum jelas harus ke unit mana
+- Kontak: WhatsApp +62 851 7112 0359; email sekpimjkt@telkomuniversity.ac.id
+- Jam semua unit: Senin-Jumat 08.00-16.30 WIB, kecuali Keuangan 09.00-15.30
+
+## Kemahasiswaan
+- Kemahasiswaan (LAAK) menangani: TAK, SKPI, beasiswa, asrama, Ormawa, konseling, kompetisi dan prestasi
+- Kontak: WhatsApp +62 813 2111 5302 (Kompetisi dan Prestasi), +62 812 1424 2600 (Beasiswa dan Kesejahteraan)
+
+## Keuangan
+- Keuangan menangani: pembayaran belum terverifikasi, tagihan BPP, virtual account, cara bayar kuliah
+- Kontak: portal Situ Keu; WhatsApp (chat saja) +62 812 2142 4646 atau +62 811 1012 6353; email finance@telkomuniversity.ac.id
+
+## Layanan IT
+- Layanan IT (IT Service Desk) menangani: lupa password, akun terkunci, email kampus, SSO, MFA, LMS/CeLOE
+- Kontak: portal IT Service Desk; WhatsApp (chat saja) +62 823 1994 9941; Instagram @servicedesk_puti
+
+## Admin Prodi S1 Teknologi Informasi
+- Admin Prodi S1 TI (Kaprodi: Hertanto Suryoprayogo, S.Kom., M.Kom.) menangani: surat pengantar, perwalian, pendaftaran sidang/tugas akhir, legalisir
+- Kontak: WhatsApp +62 811 9780 0200; telepon +62 (21) 5451697; email bitjkt@telkomuniversity.ac.id; Instagram @teknologiinformasi_tukj
+
+## Koordinator Magang dan Kerja Praktik
+- Koordinator Magang dan KP menangani: validasi pendaftaran magang/KP, surat pengantar, dosen pembimbing lapangan, konversi SKS
+- Kontak: iGracias menu Academic -> Internship; surat lewat WhatsApp Admin Prodi +62 811 9780 0200 atau loket LAAK
+
+## PIC MBKM
+- PIC MBKM menangani: info program MBKM, Surat Rekomendasi/SPTJM, konsultasi program, pemetaan mata kuliah, konversi SKS
+- Kontak: situs resmi MBKM Telkom University; Instagram @mbkm.telkomuniversity; berkas fisik lewat Admin Prodi +62 811 9780 0200
+
+## PIC Innovillage
+- PIC Innovillage menangani: pendaftaran, panduan proposal, pendanaan proyek, pelaporan social project
+- Kontak: WhatsApp Sekretariat +62 812 2200 1203; situs resmi Innovillage; Instagram @innovillage
+
+## PIC TAK
+- PIC TAK menangani: validasi sertifikat, input dan penyetaraan poin TAK, verifikasi poin syarat sidang akhir
+- Kontak: input mandiri di iGracias menu Student Activities -> Student Activity Transcript; validasi dan keluhan lewat Tim Kemahasiswaan LAAK (loket lantai dasar)
+
 ## Layanan Akademik (LAAK)
-- Menangani: perkuliahan, kurikulum, jadwal, KRS, nilai, cuti, dan administrasi akademik lainnya
-- Kontak: WhatsApp 0811-1910-0296 (https://wa.me/6281119100296)
+- Layanan Akademik menangani: perkuliahan, kurikulum, jadwal, KRS, nilai, cuti
+- Kontak: WhatsApp 0811-1910-0296
 
-## Kemahasiswaan (LAAK)
-- Menangani: kegiatan di luar akademik seperti UKM, lomba, pengembangan minat bakat, beasiswa, dan TAK
-- Kontak: WhatsApp 0811-9650-8821 (https://wa.me/6281196508821)
+## Logistik dan Satgas PPKPT
+- Logistik (sarana dan prasarana, AC rusak): Kampus DM dan SB 0811-190-944; Kampus HL dan MK 0811-104-190
+- Satgas PPKPT (kekerasan seksual, perundungan): WhatsApp 0813-2332-3677
 
-## Layanan Karir dan Alumni (LAAK, CDC)
-- Menangani: karier, lowongan, magang, dan alumni
-- Kontak: WhatsApp 0811-9650-8831 (https://wa.me/6281196508831)
-
-## Layanan Keuangan (KUG)
-- Menangani: pembayaran, tagihan, dan kendala keuangan mahasiswa
-- Kontak: WhatsApp 0811-368-393 (https://wa.me/62811368393)
-
-## Helpdesk IT DTI Telkom University Jakarta
-- Menangani: akun SSO, iGracias, email kampus, lupa password, akun terkunci, LMS, dan internet kampus
-- Kontak: WhatsApp 0813-1980-0200 (https://wa.me/6281319800200), atau tiket online lewat SITU https://it-servicedesk.telkomuniversity.ac.id/
-
-## Prodi S1 Teknologi Informasi Telkom University Jakarta
-- Menangani: Kerja Praktik, MBKM, tugas akhir, kurikulum, dan informasi Prodi
-- Kontak: WhatsApp 0823-1113-3053 (https://wa.me/6282311133053)
-- Kaprodi: Hertanto Suryoprayogo, S.Kom., M.Kom.
-
-## Logistik (fasilitas kampus)
-- Menangani: kendala sarana dan prasarana kampus
-- Kontak: Kampus DM dan SB, WhatsApp 0811-190-944 (https://wa.me/62811190944); Kampus HL dan MK, WhatsApp 0811-104-190 (https://wa.me/62811104190)
-
-## Openlibrary Jakarta (perpustakaan)
-- Kontak: WhatsApp 0811-1910-0294 (https://wa.me/6281119100294)
-
-## Hotline Direktorat Kampus Jakarta
-- Menangani: kendala umum yang belum jelas harus ke unit mana
-- Kontak: +62 851 7112 0359, email sekpimjkt@telkomuniversity.ac.id
-
-## Satgas PPKPT (Pencegahan dan Penanganan Kekerasan)
-- Menangani: laporan kekerasan, termasuk kekerasan seksual dan perundungan
-- Kontak: WhatsApp 0813-2332-3677 (https://wa.me/6281323323677)
-
-## Keluhan dan saran
-- Suara TelUtizen (aspirasi dan keluhan): WhatsApp 0811-2124-447 (https://wa.me/628112124447)
-- Formulir keluhan dan saran civitas akademika: https://forms.office.com/r/z1DehrSuzE
-
-Sumber: halaman FAQ dan beranda jakarta.telkomuniversity.ac.id, diakses 24 Oktober 2026.
+Sumber: Direktori Kontak Layanan (Prodi) dan FAQ jakarta.telkomuniversity.ac.id, 25 Oktober 2026.
